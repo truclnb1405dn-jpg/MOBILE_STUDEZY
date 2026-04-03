@@ -1,64 +1,99 @@
 package com.example.studezy;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link LoginFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
+
+import com.example.studezy.api.LoginRequest;
+import com.example.studezy.api.LoginResponse;
+import com.example.studezy.api.RetrofitClient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class LoginFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private EditText edtUsername, edtPassword;
+    private Button btnLogin;
 
     public LoginFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment LoginFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static LoginFragment newInstance(String param1, String param2) {
-        LoginFragment fragment = new LoginFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_login, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // 1. Ánh xạ View (Nhớ sửa R.id... cho khớp với file XML của bạn)
+        edtUsername = view.findViewById(R.id.et_username);
+        edtPassword = view.findViewById(R.id.et_password);
+        btnLogin = view.findViewById(R.id.btn_login);
+
+        // 2. Bắt sự kiện click nút Đăng nhập
+        btnLogin.setOnClickListener(v -> performLogin(view));
+    }
+
+    private void performLogin(View view) {
+        String username = edtUsername.getText().toString().trim();
+        String password = edtPassword.getText().toString().trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Tạo cục dữ liệu để gửi đi
+        LoginRequest request = new LoginRequest(username, password);
+
+        // Gọi API qua Retrofit
+        RetrofitClient.getInstance().getApi().loginUser(request).enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    LoginResponse loginResponse = response.body();
+
+                    // Lấy token và tên từ server trả về
+                    String token = loginResponse.getToken();
+                    String fullName = loginResponse.getFullName();
+
+                    // Lưu Token vào SharedPreferences (để dùng cho các màn hình sau)
+                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("USER_TOKEN", token);
+                    editor.putString("USER_FULL_NAME", fullName);
+                    editor.apply();
+
+                    Toast.makeText(getContext(), "Xin chào " + fullName, Toast.LENGTH_SHORT).show();
+
+                    // Chuyển sang màn hình Home bằng Navigation (Nhớ tạo action trong nav_graph.xml trước)
+                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_homeFragment);
+
+                } else {
+                    Toast.makeText(getContext(), "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
