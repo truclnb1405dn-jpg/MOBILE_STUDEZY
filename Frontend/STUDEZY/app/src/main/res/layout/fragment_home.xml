@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="#EAF0F6">
     <ScrollView
         android:layout_width="match_parent"
@@ -19,6 +20,9 @@
 
             <!-- HEADER -->
             <androidx.constraintlayout.widget.ConstraintLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="230dp"
                 android:background="@drawable/header_background"
@@ -41,7 +45,7 @@
                     android:layout_height="54dp"
                     android:background="@drawable/bg_avatar_yellow"
                     android:gravity="center"
-                    android:text="BT"
+                    tools:text="BT"
                     android:textColor="#1E3A8A"
                     android:textSize="20sp"
                     android:textStyle="bold"
@@ -53,7 +57,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
-                    android:text="Chào Bảo Trúc!"
+                    tools:text="Chào Bảo Trúc!"
                     android:textColor="#FFFFFF"
                     android:textSize="24sp"
                     android:textStyle="bold"
@@ -66,7 +70,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Hôm nay bạn có 2 tiết học và 2 deadline cần xử lý"
+                    tools:text="Hôm nay bạn có 2 tiết học và 2 deadline cần xử lý"
                     android:textColor="#DCE8FF"
                     android:textSize="14sp"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -77,6 +81,9 @@
 
             <!-- CALENDAR CARD -->
             <com.google.android.material.card.MaterialCardView
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                xmlns:tools="http://schemas.android.com/tools"
                 android:id="@+id/card_calendar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -110,17 +117,18 @@
                         android:orientation="horizontal"
                         android:weightSum="7">
 
-                        <!-- T2 -->
                         <LinearLayout
+                            android:id="@+id/layout_t2"
                             android:layout_width="0dp"
                             android:layout_height="80dp"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_edit"
+                            android:background="@drawable/bg_tab_unselected"
                             android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tv_label_t2"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="T2"
@@ -128,26 +136,28 @@
                                 android:textSize="16sp" />
 
                             <TextView
+                                android:id="@+id/tv_date_t2"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="29"
+                                tools:text="29"
                                 android:textColor="#111111"
                                 android:textSize="19sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <!-- T3 -->
                         <LinearLayout
+                            android:id="@+id/layout_t3"
                             android:layout_width="0dp"
                             android:layout_height="80dp"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_edit"
+                            android:background="@drawable/bg_tab_unselected"
                             android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tv_label_t3"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="T3"
@@ -155,26 +165,28 @@
                                 android:textSize="16sp" />
 
                             <TextView
+                                android:id="@+id/tv_date_t3"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="30"
+                                tools:text="30"
                                 android:textColor="#111111"
                                 android:textSize="19sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <!-- T4 -->
                         <LinearLayout
+                            android:id="@+id/layout_t4"
                             android:layout_width="0dp"
                             android:layout_height="80dp"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_edit"
+                            android:background="@drawable/bg_tab_unselected"
                             android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tv_label_t4"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="T4"
@@ -182,53 +194,57 @@
                                 android:textSize="16sp" />
 
                             <TextView
+                                android:id="@+id/tv_date_t4"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="31"
+                                tools:text="31"
                                 android:textColor="#111111"
                                 android:textSize="19sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <!-- T5 selected -->
                         <LinearLayout
+                            android:id="@+id/layout_t5"
                             android:layout_width="0dp"
                             android:layout_height="80dp"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_tab_selected"
+                            android:background="@drawable/bg_tab_unselected"
                             android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tv_label_t5"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="T5"
-                                android:textColor="#FFFFFF"
+                                android:textColor="#222222"
                                 android:textSize="16sp" />
 
                             <TextView
+                                android:id="@+id/tv_date_t5"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="01"
-                                android:textColor="#FFFFFF"
+                                tools:text="01"
+                                android:textColor="#111111"
                                 android:textSize="19sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <!-- T6 -->
                         <LinearLayout
+                            android:id="@+id/layout_t6"
                             android:layout_width="0dp"
                             android:layout_height="80dp"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_edit"
+                            android:background="@drawable/bg_tab_unselected"
                             android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tv_label_t6"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="T6"
@@ -236,26 +252,28 @@
                                 android:textSize="16sp" />
 
                             <TextView
+                                android:id="@+id/tv_date_t6"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="02"
+                                tools:text="02"
                                 android:textColor="#111111"
                                 android:textSize="19sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <!-- T7 -->
                         <LinearLayout
+                            android:id="@+id/layout_t7"
                             android:layout_width="0dp"
                             android:layout_height="80dp"
                             android:layout_marginEnd="6dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_edit"
+                            android:background="@drawable/bg_tab_unselected"
                             android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tv_label_t7"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="T7"
@@ -263,25 +281,27 @@
                                 android:textSize="16sp" />
 
                             <TextView
+                                android:id="@+id/tv_date_t7"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="03"
+                                tools:text="03"
                                 android:textColor="#111111"
                                 android:textSize="19sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <!-- CN -->
                         <LinearLayout
+                            android:id="@+id/layout_cn"
                             android:layout_width="0dp"
                             android:layout_height="80dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_edit"
+                            android:background="@drawable/bg_tab_unselected"
                             android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tv_label_cn"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="CN"
@@ -289,10 +309,11 @@
                                 android:textSize="16sp" />
 
                             <TextView
+                                android:id="@+id/tv_date_cn"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="04"
+                                tools:text="04"
                                 android:textColor="#111111"
                                 android:textSize="19sp"
                                 android:textStyle="bold" />
@@ -352,211 +373,12 @@
                     app:layout_constraintBottom_toBottomOf="@+id/layout_schedule_section" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- CARD MON HOC 1 -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_subject_1"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_classes_today"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginEnd="16dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="18dp">
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:id="@+id/tv_subject_name_1"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="12dp"
-                            android:text="Lập trình Python nâng cao"
-                            android:textColor="#1E3A8A"
-                            android:textSize="17sp"
-                            android:textStyle="bold"
-                            app:layout_constraintEnd_toStartOf="@+id/btn_subject_1"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <ImageButton
-                            android:id="@+id/btn_subject_1"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_btn_edit"
-                            android:padding="9dp"
-                            android:src="@drawable/ic_note"
-                            app:tint="#1E3A8A"
-                            android:contentDescription="Mở môn học"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <LinearLayout
-                            android:id="@+id/layout_room_1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/tv_subject_name_1">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_school" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
-                                android:text="Phòng A203"
-                                android:textColor="#818181"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="32dp"
-                        android:layout_marginTop="16dp"
-                        app:cardCornerRadius="20dp"
-                        app:cardBackgroundColor="#D4E5EF"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Giờ  •  7h - 9h30"
-                                android:textColor="#808080"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
-
-                    </com.google.android.material.card.MaterialCardView>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- CARD MON HOC 2 -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_subject_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginEnd="16dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="18dp">
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:id="@+id/tv_subject_name_2"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="12dp"
-                            android:text="SQL Server &amp; Database"
-                            android:textColor="#1E3A8A"
-                            android:textSize="17sp"
-                            android:textStyle="bold"
-                            app:layout_constraintEnd_toStartOf="@+id/btn_subject_2"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <ImageButton
-                            android:id="@+id/btn_subject_2"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@drawable/bg_btn_edit"
-                            android:padding="9dp"
-                            android:src="@drawable/ic_note"
-                            app:tint="#1E3A8A"
-                            android:contentDescription="Mở môn học"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/tv_subject_name_2">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_school" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
-                                android:text="Phòng D203"
-                                android:textColor="#818181"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="32dp"
-                        android:layout_marginTop="16dp"
-                        app:cardCornerRadius="20dp"
-                        app:cardBackgroundColor="#D4E5EF"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Giờ  •  13h - 15h30"
-                                android:textColor="#808080"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
-
-                    </com.google.android.material.card.MaterialCardView>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_marginTop="8dp"
+                tools:listitem="@layout/item_class" />
 
             <!-- SECTION: DEADLINE -->
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -616,173 +438,15 @@
                         app:tint="#4B7DFF" />
                 </LinearLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <!-- DEADLINE 1 -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_deadline_1"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_deadlines"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginEnd="16dp"
-                app:cardBackgroundColor="#F8F8F8"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp">
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="20dp"
+                tools:listitem="@layout/item_deadline"
+                tools:itemCount="3"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <RadioButton
-                        android:id="@+id/rb_deadline_1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:buttonTint="#C7C7C7" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Bài tập lớn Python - Xây dựng hệ thống"
-                            android:textColor="#1E3A8A"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="⏰  Còn 3 giờ"
-                            android:textColor="#FF4D3D"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- DEADLINE 2 -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_deadline_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginEnd="16dp"
-                app:cardBackgroundColor="#F8F8F8"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <RadioButton
-                        android:id="@+id/rb_deadline_2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:buttonTint="#C7C7C7" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Bài tập tuần 3 - SQL Server"
-                            android:textColor="#1E3A8A"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="⏰  Còn 1 ngày"
-                            android:textColor="#FF4D3D"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- DEADLINE 3 -->
-            <!-- DEADLINE 3 -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_deadline_3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginEnd="16dp"
-                app:cardBackgroundColor="#F8F8F8"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <RadioButton
-                        android:id="@+id/rb_deadline_3"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:buttonTint="#C7C7C7" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Thuyết trình nhóm - Phân tích dữ liệu"
-                            android:textColor="#1E3A8A"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_marginEnd="6dp"
-                                android:src="@drawable/ic_calendar" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Còn 3 ngày"
-                                android:textColor="#8B8B8B"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </ScrollView>
