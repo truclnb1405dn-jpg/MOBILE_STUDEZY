@@ -78,13 +78,8 @@ WSGI_APPLICATION = 'mobile.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'mssql',
-        'NAME': 'STUDEZY',
-        'HOST': 'DESKTOP-34DRULA\\MSSQLSERVER01',
-        'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'extra_params': 'Trusted_Connection=yes;TrustServerCertificate=yes;',
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
