@@ -20,8 +20,8 @@
         android:orientation="horizontal"
         android:padding="16dp">
 
-        <RadioButton
-            android:id="@+id/rb_deadline"
+        <CheckBox
+            android:id="@+id/cb_deadline"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:buttonTint="#C7C7C7" />

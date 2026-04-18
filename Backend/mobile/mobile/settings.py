@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-1hgc6v=7%_e_)1px518zfa7&uo1o@9d%euedx)ayaqopj0lnbg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['mobile-studezy.onrender.com', 'localhost', '127.0.0.1'] # Dấu * cho phép tất cả các thiết bị kết nối tới trong quá trình test
+ALLOWED_HOSTS = ['*'] # Dấu * cho phép tất cả các thiết bị kết nối tới trong quá trình test
 
 
 # Application definition

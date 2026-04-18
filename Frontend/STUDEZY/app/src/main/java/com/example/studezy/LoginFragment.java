@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ public class LoginFragment extends Fragment {
 
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
+    private CheckBox cbRemember; // Bổ sung biến cho CheckBox
 
     public LoginFragment() {
         // Required empty public constructor
@@ -41,12 +43,26 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 1. Ánh xạ View (Nhớ sửa R.id... cho khớp với file XML của bạn)
+        // 1. Ánh xạ View
         edtUsername = view.findViewById(R.id.et_username);
         edtPassword = view.findViewById(R.id.et_password);
         btnLogin = view.findViewById(R.id.btn_login);
+        cbRemember = view.findViewById(R.id.cb_remember); // Ánh xạ CheckBox
 
-        // 2. Bắt sự kiện click nút Đăng nhập
+        // 2. Kiểm tra xem trước đó có lưu tên đăng nhập không
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
+        String savedUsername = sharedPreferences.getString("SAVED_USERNAME", "");
+
+        if (!savedUsername.isEmpty()) {
+            // Nếu có, điền sẵn tên đăng nhập và tự động tick vào ô CheckBox
+            edtUsername.setText(savedUsername);
+            cbRemember.setChecked(true);
+
+            // Focus (đưa con trỏ chuột) thẳng vào ô Mật khẩu để người dùng tiện nhập luôn
+            edtPassword.requestFocus();
+        }
+
+        // 3. Bắt sự kiện click nút Đăng nhập
         btnLogin.setOnClickListener(v -> performLogin(view));
     }
 
@@ -59,30 +75,36 @@ public class LoginFragment extends Fragment {
             return;
         }
 
-        // Tạo cục dữ liệu để gửi đi
         LoginRequest request = new LoginRequest(username, password);
 
-        // Gọi API qua Retrofit
         RetrofitClient.getInstance().getApi().loginUser(request).enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     LoginResponse loginResponse = response.body();
 
-                    // Lấy token và tên từ server trả về
                     String token = loginResponse.getToken();
                     String fullName = loginResponse.getFullName();
 
-                    // Lưu Token vào SharedPreferences (để dùng cho các màn hình sau)
                     SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
+
                     editor.putString("USER_TOKEN", token);
                     editor.putString("USER_FULL_NAME", fullName);
-                    editor.apply();
+
+                    // --- LOGIC GHI NHỚ ĐĂNG NHẬP ---
+                    if (cbRemember.isChecked()) {
+                        // Nếu user tick chọn -> Lưu lại tên đăng nhập
+                        editor.putString("SAVED_USERNAME", username);
+                    } else {
+                        // Nếu user KHÔNG tick (hoặc bỏ tick) -> Xóa tên đăng nhập đã lưu đi
+                        editor.remove("SAVED_USERNAME");
+                    }
+
+                    editor.apply(); // Áp dụng thay đổi
 
                     Toast.makeText(getContext(), "Xin chào " + fullName, Toast.LENGTH_SHORT).show();
 
-                    // Chuyển sang màn hình Home bằng Navigation (Nhớ tạo action trong nav_graph.xml trước)
                     Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_homeFragment);
 
                 } else {
