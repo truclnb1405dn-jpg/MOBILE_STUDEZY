@@ -1,58 +1,21 @@
 package com.example.studezy;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link ScheduleFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+
 public class ScheduleFragment extends Fragment {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     public ScheduleFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ScheduleFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ScheduleFragment newInstance(String param1, String param2) {
-        ScheduleFragment fragment = new ScheduleFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -60,5 +23,42 @@ public class ScheduleFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_schedule, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // 1. Khởi tạo NavController để điều hướng
+        NavController navController = Navigation.findNavController(view);
+
+        // 2. Xử lý nút Back (Nếu màn hình của bạn có nút mũi tên quay lại)
+        View btnBack = view.findViewById(R.id.btn_back);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> navController.navigateUp());
+        }
+
+        // 3. Logic cho thanh Menu bên dưới
+
+        // Chuyển sang Trang chủ
+        view.findViewById(R.id.menu_home).setOnClickListener(v -> {
+            navController.navigate(R.id.homeFragment);
+        });
+
+        // Chuyển sang trang Nhiệm vụ
+        view.findViewById(R.id.menu_task).setOnClickListener(v -> {
+            navController.navigate(R.id.taskFragment);
+        });
+
+        // Chuyển sang trang Cài đặt
+        view.findViewById(R.id.menu_settings).setOnClickListener(v -> {
+            navController.navigate(R.id.settingsFragment);
+        });
+
+        // Vì đang ở trang Lịch (Schedule), nút Lịch thường không cần navigate nữa
+        // Bạn có thể để trống hoặc xử lý cuộn lên đầu trang
+        view.findViewById(R.id.menu_schedule).setOnClickListener(v -> {
+            // Có thể thêm hiệu ứng gì đó để báo hiệu đang ở trang này
+        });
     }
 }

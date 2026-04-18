@@ -8,12 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
-
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -82,6 +84,29 @@ public class HomeFragment extends Fragment {
         rvDeadlines.setLayoutManager(new LinearLayoutManager(getContext()));
         if (!token.isEmpty()) {
             fetchTopDeadlines(token, rvDeadlines); // Thêm hàm này
+        }
+        // 5. Xử lý điều hướng thanh menu
+        NavController navController = Navigation.findNavController(view);
+
+        // Chuyển sang trang Lịch
+        view.findViewById(R.id.menu_schedule).setOnClickListener(v -> {
+            navController.navigate(R.id.scheduleFragment);
+        });
+
+        // Chuyển sang trang Nhiệm vụ
+        view.findViewById(R.id.menu_task).setOnClickListener(v -> {
+            navController.navigate(R.id.taskFragment);
+        });
+
+        // Chuyển sang trang Cài đặt
+        view.findViewById(R.id.menu_settings).setOnClickListener(v -> {
+            navController.navigate(R.id.settingsFragment);
+        });
+
+        // Nút Trang chủ (Vì đang ở Home rồi nên có thể chỉ cho cuộn lên đầu trang)
+        ScrollView scrollView = view.findViewById(R.id.rje1iynje4di);
+        if (scrollView != null) {
+            scrollView.smoothScrollTo(0, 0);
         }
     }
 
