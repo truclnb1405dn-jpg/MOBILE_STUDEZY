@@ -10,6 +10,10 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+
+
+
+
 public interface ApiService {
     @POST("api/login/")
     Call<LoginResponse> loginUser(@Body LoginRequest loginRequest);
@@ -44,4 +48,37 @@ public interface ApiService {
             @Path("id") int deadlineId,
             @Body UpdateStatusRequest request
     );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
