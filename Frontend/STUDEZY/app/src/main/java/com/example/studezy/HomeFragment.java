@@ -123,35 +123,36 @@ public class HomeFragment extends Fragment {
             todayIndex = 6;
         }
 
-        // Tua lịch về ngày Thứ 2 của tuần hiện tại
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        // --- ĐOẠN CODE MỚI ĐÃ SỬA LỖI NHẢY TUẦN ---
+        int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        if (currentDayOfWeek == Calendar.SUNDAY) {
+            // Nếu hôm nay là Chủ Nhật, lùi lại 6 ngày để về Thứ 2 của tuần hiện tại
+            calendar.add(Calendar.DAY_OF_MONTH, -6);
+        } else {
+            // Nếu là các ngày khác, set về Thứ 2 bình thường
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        }
+        // ------------------------------------------
 
-        SimpleDateFormat sdfUI = new SimpleDateFormat("dd", Locale.getDefault()); // Định dạng hiển thị "18"
-        SimpleDateFormat sdfAPI = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()); // Định dạng gửi API "2026-04-18"
+        SimpleDateFormat sdfUI = new SimpleDateFormat("dd", Locale.getDefault());
+        SimpleDateFormat sdfAPI = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         // Gán dữ liệu cho 7 ngày và thiết lập sự kiện click
         for (int i = 0; i < 7; i++) {
             tvDates[i].setText(sdfUI.format(calendar.getTime()));
-            apiDateStrings[i] = sdfAPI.format(calendar.getTime()); // Lưu chuỗi ngày để gọi API
+            apiDateStrings[i] = sdfAPI.format(calendar.getTime());
 
-            final int currentIndex = i; // Biến hằng để dùng trong onClick
+            final int currentIndex = i;
 
-            // Xử lý sự kiện khi người dùng click vào một ngày
             layoutDays[i].setOnClickListener(v -> {
-                // 1. Cập nhật lại màu sắc giao diện
                 updateCalendarUI(currentIndex);
-
-                // 2. Lấy chuỗi ngày tương ứng vừa click
                 String selectedDate = apiDateStrings[currentIndex];
-
-                // 3. Gọi hàm tải dữ liệu theo ngày đã chọn
                 fetchDataForSelectedDate(selectedDate);
             });
 
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-        // Mặc định khi mới vào màn hình, chọn ngày hôm nay
         updateCalendarUI(todayIndex);
     }
 
@@ -329,7 +330,7 @@ public class HomeFragment extends Fragment {
             });
         }
 
-        ScrollView scrollView = view.findViewById(R.id.rje1iynje4di); // Lưu ý: Đảm bảo ID này tồn tại trong file XML của bạn, nếu không hãy xóa dòng này.
+        androidx.core.widget.NestedScrollView scrollView = view.findViewById(R.id.rje1iynje4di); // Lưu ý: Đảm bảo ID này tồn tại trong file XML của bạn, nếu không hãy xóa dòng này.
         if (scrollView != null) {
             scrollView.smoothScrollTo(0, 0);
         }

@@ -8,7 +8,7 @@ from rest_framework.authentication import TokenAuthentication
 from django.utils import timezone
 from django.contrib.auth import authenticate
 from .models import User, ClassSchedule, Deadline
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class LoginAPIView(APIView):

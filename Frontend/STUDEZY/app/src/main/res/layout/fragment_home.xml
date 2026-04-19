@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="#EAF0F6">
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/rje1iynje4di"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -379,6 +379,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_class" />
 
             <!-- SECTION: DEADLINE -->
@@ -445,12 +446,13 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="20dp"
+                android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_deadline"
                 tools:itemCount="3"/>
 
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <!-- Thanh menu-->
     <com.google.android.material.card.MaterialCardView
