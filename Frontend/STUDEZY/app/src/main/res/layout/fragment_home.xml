@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:background="#EAF0F6">
     <ScrollView
-
+        android:id="@+id/rje1iynje4di"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/card_bottom_menu"
