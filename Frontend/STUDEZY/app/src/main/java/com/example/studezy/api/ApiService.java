@@ -10,9 +10,10 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-
-
-
+import retrofit2.http.Path;
+import retrofit2.http.Query;
+import retrofit2.http.DELETE;
+import java.util.Map;
 
 public interface ApiService {
     @POST("api/login/")
@@ -49,36 +50,36 @@ public interface ApiService {
             @Body UpdateStatusRequest request
     );
 
+    @GET("api/tasks/")
+    Call<List<TaskModel>> getTasks(
+            @Header("Authorization") String token, // Thêm dòng này để gửi Token
+            @Query("search") String keyword,
+            @Query("filter") String timeFilter
+    );
 
+    @POST("api/tasks/{id}/update-status/")
+    Call<Void> updateTaskStatus(
+            @Header("Authorization") String token,
+            @Path("id") int taskId,
+            @Body java.util.Map<String, Integer> body
+    );
 
+    @POST("api/tasks/")
+    Call<TaskModel> createTask(
+            @Header("Authorization") String token,
+            @Body Map<String, String> body
+    );
 
+    @POST("api/tasks/{id}/edit/")
+    Call<TaskModel> editTask(
+            @Header("Authorization") String token,
+            @Path("id") int taskId,
+            @Body Map<String, String> body
+    );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @DELETE("api/tasks/{id}/delete/")
+    Call<Void> deleteTask(
+            @Header("Authorization") String token,
+            @Path("id") int taskId
+    );
 }
