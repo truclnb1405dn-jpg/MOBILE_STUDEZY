@@ -270,3 +270,197 @@ class ToggleDeadlineAPIView(APIView):
 
         return Response({'status': 'error', 'message': 'Thiếu dữ liệu is_completed'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+class TasksAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        search_keyword = request.GET.get('search', '').strip()
+        time_filter = request.GET.get('filter', 'all')
+        now = timezone.localtime(timezone.now())
+        queryset = Deadline.objects.filter(user=user)
+
+        if search_keyword:
+            queryset = queryset.filter(title__icontains=search_keyword)
+
+        if time_filter == 'today':
+            queryset = queryset.filter(due_date__date=now.date(), is_completed=False)
+        elif time_filter == 'week':
+            monday = now.date() - timedelta(days=now.weekday())
+            sunday = monday + timedelta(days=6)
+            queryset = queryset.filter(due_date__date__gte=monday, due_date__date__lte=sunday, is_completed=False)
+        elif time_filter == 'completed':
+            queryset = queryset.filter(is_completed=True)
+        else:
+            queryset = queryset.order_by('is_completed', 'due_date')
+
+        data = []
+        for d in queryset:
+            status_code = 1 if d.is_completed else 0
+            time_left_str = "Đã hoàn thành"
+            if not d.is_completed:
+                if d.due_date < now:
+                    time_left_str = "Quá hạn!"
+                else:
+                    diff = d.due_date - now
+                    days = diff.days
+                    hours = diff.seconds // 3600
+                    if days > 0:
+                        time_left_str = f"Còn {days} ngày"
+                    elif hours > 0:
+                        time_left_str = f"Còn {hours} giờ"
+                    else:
+                        time_left_str = "Dưới 1 giờ"
+
+            data.append({
+                'id': d.id,
+                'title': d.title,
+                'description': getattr(d, 'description', 'Chi tiết nhiệm vụ...'),
+                'deadline_date': d.due_date.strftime("%d/%m/%Y"),
+                'time_left': time_left_str,
+                'status': status_code
+            })
+        return Response(data)
+
+    def post(self, request):
+        user = request.user
+        title = request.data.get('title')
+        description = request.data.get('description', '')
+        due_date_str = request.data.get('due_date')
+
+        if not title or not due_date_str:
+            return Response({'error': 'Thiếu thông tin'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from datetime import datetime
+            from django.utils.timezone import make_aware, get_default_timezone
+
+            if len(due_date_str) > 10:
+                naive_dt = datetime.strptime(due_date_str, "%d/%m/%Y %H:%M")
+            else:
+                naive_dt = datetime.strptime(due_date_str, "%d/%m/%Y")
+
+            aware_dt = make_aware(naive_dt, get_default_timezone())
+
+            new_task = Deadline.objects.create(
+                user=user,
+                title=title,
+                description=description,
+                due_date=aware_dt,
+                is_completed=False
+            )
+
+            now = timezone.localtime(timezone.now())
+            diff = new_task.due_date - now
+            days = diff.days
+            hours = diff.seconds // 3600
+
+            if days > 0:
+                time_left_str = f"Còn {days} ngày"
+            elif hours > 0:
+                time_left_str = f"Còn {hours} giờ"
+            else:
+                time_left_str = "Dưới 1 giờ"
+
+            response_data = {
+                'id': new_task.id,
+                'title': new_task.title,
+                'description': getattr(new_task, 'description', 'Chi tiết nhiệm vụ...'),
+                'deadline_date': new_task.due_date.strftime("%d/%m/%Y"),
+                'time_left': time_left_str,
+                'status': 0
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateTaskStatusAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            task = Deadline.objects.get(pk=pk, user=request.user)
+            new_status = request.data.get('status')
+            task.is_completed = (new_status == 1)
+            task.save()
+            return Response({'status': 'success', 'is_completed': task.is_completed}, status=status.HTTP_200_OK)
+        except Deadline.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Không tìm thấy nhiệm vụ'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class EditTaskAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            task = Deadline.objects.get(pk=pk, user=request.user)
+            title = request.data.get('title')
+            description = request.data.get('description', '')
+            due_date_str = request.data.get('due_date')
+
+            if not title or not due_date_str:
+                return Response({'error': 'Thiếu thông tin'}, status=status.HTTP_400_BAD_REQUEST)
+
+            from datetime import datetime
+            from django.utils.timezone import make_aware, get_default_timezone
+
+            if len(due_date_str) > 10:
+                naive_dt = datetime.strptime(due_date_str, "%d/%m/%Y %H:%M")
+            else:
+                naive_dt = datetime.strptime(due_date_str, "%d/%m/%Y")
+
+            aware_dt = make_aware(naive_dt, get_default_timezone())
+
+            task.title = title
+            task.description = description
+            task.due_date = aware_dt
+            task.save()
+
+            now = timezone.localtime(timezone.now())
+            time_left_str = "Đã hoàn thành"
+            if not task.is_completed:
+                if task.due_date < now:
+                    time_left_str = "Quá hạn!"
+                else:
+                    diff = task.due_date - now
+                    days = diff.days
+                    hours = diff.seconds // 3600
+                    if days > 0:
+                        time_left_str = f"Còn {days} ngày"
+                    elif hours > 0:
+                        time_left_str = f"Còn {hours} giờ"
+                    else:
+                        time_left_str = "Dưới 1 giờ"
+
+            response_data = {
+                'id': task.id,
+                'title': task.title,
+                'description': getattr(task, 'description', ''),
+                'deadline_date': task.due_date.strftime("%d/%m/%Y"),
+                'time_left': time_left_str,
+                'status': 1 if task.is_completed else 0
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Deadline.DoesNotExist:
+            return Response({'error': 'Không tìm thấy nhiệm vụ'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteTaskAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        try:
+            task = Deadline.objects.get(pk=pk, user=request.user)
+            task.delete()
+            return Response({'status': 'success', 'message': 'Đã xoá nhiệm vụ'}, status=status.HTTP_200_OK)
+        except Deadline.DoesNotExist:
+            return Response({'error': 'Không tìm thấy nhiệm vụ'}, status=status.HTTP_404_NOT_FOUND)
