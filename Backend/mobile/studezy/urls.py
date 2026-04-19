@@ -10,4 +10,8 @@ urlpatterns = [
     path('api/classes-by-date/', ClassesByDateAPIView.as_view()),
     path('api/deadlines-by-date/', DeadlinesByDateAPIView.as_view()),
     path('api/deadlines/<int:pk>/toggle/', ToggleDeadlineAPIView.as_view()),
+
+
+
+
 ]
