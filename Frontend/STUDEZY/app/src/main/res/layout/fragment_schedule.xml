@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F1F7FC">
@@ -55,30 +56,30 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nested_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:fillViewport="true"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@+id/header_layout"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toTopOf="@+id/card_bottom_menu">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="150dp"
-            android:clipToPadding="false">
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="40dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/card_semester_info"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="24dp"
                 android:background="@drawable/bg_card_white"
                 android:padding="20dp"
                 android:elevation="4dp"
-                app:layout_constraintTop_toBottomOf="@+id/header_layout">
+                android:layout_marginTop="24dp"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <View
                     android:id="@+id/view_left_accent"
@@ -266,7 +267,6 @@
                 android:id="@+id/layout_today_schedule_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="24dp"
                 app:layout_constraintTop_toBottomOf="@+id/card_semester_info">
 
@@ -329,9 +329,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:clipToPadding="false"
-                android:paddingHorizontal="16dp"
                 android:scrollbars="none"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/layout_today_schedule_header">
 
                 <LinearLayout
@@ -347,7 +345,7 @@
                         android:background="@drawable/bg_tab_selected"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="6dp"
-                        android:text="Thứ 2 (3)"
+                        android:text="Thứ 2"
                         android:textColor="#FFFFFF"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -360,7 +358,7 @@
                         android:background="@drawable/bg_tab_unselected"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="6dp"
-                        android:text="Thứ 3 (2)"
+                        android:text="Thứ 3"
                         android:textColor="#94989B"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -373,7 +371,7 @@
                         android:background="@drawable/bg_tab_unselected"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="6dp"
-                        android:text="Thứ 4 (1)"
+                        android:text="Thứ 4"
                         android:textColor="#94989B"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -390,7 +388,9 @@
                         android:textColor="#94989B"
                         android:textSize="14sp"
                         android:textStyle="bold" />
+
                     <TextView
+                        android:id="@+id/tab_friday"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="10dp"
@@ -403,6 +403,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tab_saturday"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="10dp"
@@ -415,6 +416,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tab_sunday"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="10dp"
@@ -429,325 +431,26 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/card_course_python"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_schedules"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card_white"
-                android:padding="16dp"
-                android:elevation="3dp"
-                app:layout_constraintTop_toBottomOf="@+id/scroll_days_of_week">
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false"
+                app:layout_constraintTop_toBottomOf="@+id/scroll_days_of_week"
+                tools:listitem="@layout/item_class" />
 
-                <View
-                    android:id="@+id/view_blue_accent"
-                    android:layout_width="4dp"
-                    android:layout_height="0dp"
-                    android:background="@drawable/bg_left_accent_blue"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tv_course_name"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="Lập trình Python nâng cao"
-                    android:textColor="#1E3A8A"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@+id/view_blue_accent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/btn_delete"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/bg_btn_action"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_trash3"
-                    app:tint="#757575"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/btnedit"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_btn_action"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_pen"
-                    app:tint="#FF7043"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_delete"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:id="@+id/iv_time"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginTop="12dp"
-                    android:src="@drawable/ic_whiteclock"
-                    app:layout_constraintStart_toStartOf="@+id/tv_course_name"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_course_name" />
-
-                <TextView
-                    android:id="@+id/tv_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="07:00"
-                    android:textColor="#757575"
-                    android:textSize="16sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/iv_time"
-                    app:layout_constraintStart_toEndOf="@+id/iv_time"
-                    app:layout_constraintTop_toTopOf="@+id/iv_time" />
-
-                <ImageView
-                    android:id="@+id/iv_room"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginTop="12dp"
-                    android:src="@drawable/ic_school"
-                    app:layout_constraintStart_toStartOf="@+id/tv_course_name"
-                    app:layout_constraintTop_toBottomOf="@+id/iv_time" />
-
-                <TextView
-                    android:id="@+id/tv_room"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Phòng A203"
-                    android:textColor="#757575"
-                    android:textSize="16sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/iv_room"
-                    app:layout_constraintStart_toEndOf="@+id/iv_room"
-                    app:layout_constraintTop_toTopOf="@+id/iv_room" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/card_course_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card_white"
-                android:padding="16dp"
-                android:elevation="3dp"
-                app:layout_constraintTop_toBottomOf="@+id/card_course_python">
-
-                <View
-                    android:id="@+id/view_blue_accent_2"
-                    android:layout_width="4dp"
-                    android:layout_height="0dp"
-                    android:background="@drawable/bg_left_accent_blue"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tv_course_name_2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="Cấu trúc dữ liệu &amp; Giải thuật"
-                    android:textColor="#1E3A8A"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_edit_2"
-                    app:layout_constraintStart_toEndOf="@+id/view_blue_accent_2"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/btn_delete_2"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/bg_btn_action"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_trash3"
-                    app:tint="#757575"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/btn_edit_2"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_btn_action"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_pen"
-                    app:tint="#FF7043"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_delete_2"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:id="@+id/iv_time_2"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginTop="12dp"
-                    android:src="@drawable/ic_whiteclock"
-                    app:layout_constraintStart_toStartOf="@+id/tv_course_name_2"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_course_name_2" />
-
-                <TextView
-                    android:id="@+id/tv_time_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="13:00"
-                    android:textColor="#757575"
-                    android:textSize="16sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/iv_time_2"
-                    app:layout_constraintStart_toEndOf="@+id/iv_time_2"
-                    app:layout_constraintTop_toTopOf="@+id/iv_time_2" />
-
-                <ImageView
-                    android:id="@+id/iv_room_2"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginTop="12dp"
-                    android:src="@drawable/ic_school"
-                    app:layout_constraintStart_toStartOf="@+id/tv_course_name_2"
-                    app:layout_constraintTop_toBottomOf="@+id/iv_time_2" />
-
-                <TextView
-                    android:id="@+id/tv_room_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Phòng C202"
-                    android:textColor="#757575"
-                    android:textSize="16sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/iv_room_2"
-                    app:layout_constraintStart_toEndOf="@+id/iv_room_2"
-                    app:layout_constraintTop_toTopOf="@+id/iv_room_2" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/card_course_3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card_white"
-                android:padding="16dp"
-                android:elevation="3dp"
-                app:layout_constraintTop_toBottomOf="@+id/card_course_2">
-
-                <View
-                    android:id="@+id/view_blue_accent_3"
-                    android:layout_width="4dp"
-                    android:layout_height="0dp"
-                    android:background="@drawable/bg_left_accent_blue"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tv_course_name_3"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="Toán rời rạc"
-                    android:textColor="#1E3A8A"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_edit_3"
-                    app:layout_constraintStart_toEndOf="@+id/view_blue_accent_3"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/btn_delete_3"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/bg_btn_action"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_trash3"
-                    app:tint="#757575"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/btn_edit_3"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_btn_action"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_pen"
-                    app:tint="#FF7043"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_delete_3"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:id="@+id/iv_time_3"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginTop="12dp"
-                    android:src="@drawable/ic_whiteclock"
-                    app:layout_constraintStart_toStartOf="@+id/tv_course_name_3"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_course_name_3" />
-
-                <TextView
-                    android:id="@+id/tv_time_3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="15:30"
-                    android:textColor="#757575"
-                    android:textSize="16sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/iv_time_3"
-                    app:layout_constraintStart_toEndOf="@+id/iv_time_3"
-                    app:layout_constraintTop_toTopOf="@+id/iv_time_3" />
-
-                <ImageView
-                    android:id="@+id/iv_room_3"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginTop="12dp"
-                    android:src="@drawable/ic_school"
-                    app:layout_constraintStart_toStartOf="@+id/tv_course_name_3"
-                    app:layout_constraintTop_toBottomOf="@+id/iv_time_3" />
-
-                <TextView
-                    android:id="@+id/tv_room_3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Phòng D004"
-                    android:textColor="#757575"
-                    android:textSize="16sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/iv_room_3"
-                    app:layout_constraintStart_toEndOf="@+id/iv_room_3"
-                    app:layout_constraintTop_toTopOf="@+id/iv_room_3" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </LinearLayout>
-    </ScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_bottom_menu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="20dp"
-        app:cardElevation="8dp"
-        app:strokeWidth="0dp">
+        app:cardElevation="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -773,7 +476,6 @@
                 <ImageView
                     android:layout_width="44dp"
                     android:layout_height="44dp"
-                    android:contentDescription="Trang chủ"
                     android:src="@drawable/ic_home" />
 
                 <TextView
@@ -799,7 +501,6 @@
                 <ImageView
                     android:layout_width="34dp"
                     android:layout_height="34dp"
-                    android:contentDescription="Lịch"
                     android:src="@drawable/ic_calendar" />
 
                 <TextView
@@ -825,7 +526,6 @@
                 <ImageView
                     android:layout_width="34dp"
                     android:layout_height="34dp"
-                    android:contentDescription="Nhiệm vụ"
                     android:src="@drawable/ic_assignment" />
 
                 <TextView
@@ -851,8 +551,6 @@
                 <ImageView
                     android:layout_width="34dp"
                     android:layout_height="34dp"
-                    android:contentDescription="Cài đặt"
-                    android:background="@drawable/bg_tab_selected"
                     android:src="@drawable/ic_settings" />
 
                 <TextView
