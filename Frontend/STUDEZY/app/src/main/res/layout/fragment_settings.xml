@@ -116,17 +116,19 @@
                             android:layout_marginStart="16dp">
 
                             <TextView
+                                android:id="@+id/tv_full_name"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Lê Nguyễn Bảo Trúc"
+                                android:text="Họ và tên"
                                 android:textStyle="bold"
                                 android:textSize="18sp"
                                 android:textColor="#1A3673" />
 
                             <TextView
+                                android:id="@+id/tv_email"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="baotruc@student.edu.vn"
+                                android:text="email@example.com"
                                 android:textSize="14sp"
                                 android:textColor="#666666"
                                 android:layout_marginTop="4dp" />
@@ -176,11 +178,15 @@
                     android:padding="16dp">
 
                     <LinearLayout
+                        android:id="@+id/layout_edit_profile"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingVertical="10dp">
+                        android:paddingVertical="10dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
 
                         <androidx.cardview.widget.CardView
                             android:layout_width="48dp"
@@ -230,13 +236,18 @@
                         android:layout_marginVertical="8dp" />
 
                     <LinearLayout
+                        android:id="@+id/layout_change_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingVertical="10dp">
+                        android:paddingVertical="10dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
 
-                        <androidx.cardview.widget.CardView
+
+                    <androidx.cardview.widget.CardView
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             app:cardBackgroundColor="#E3F2FD"
