@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.contrib.auth import authenticate
 from .models import User, ClassSchedule, Deadline, Semester
 from datetime import datetime, timedelta
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
 class LoginAPIView(APIView):
@@ -588,3 +590,90 @@ class ClassScheduleDetailAPIView(APIView):
             return Response({'status': 'error', 'message': 'Không tìm thấy môn học'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class ProfileAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'status': 'success',
+            'full_name': user.full_name,
+            'email': user.email,
+            'phone_number': user.phone_number or '',
+            'username': user.username,
+        }, status=status.HTTP_200_OK)
+
+
+class UpdateProfileAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = request.user
+
+        full_name = request.data.get('full_name', '').strip()
+        email = request.data.get('email', '').strip()
+        phone_number = request.data.get('phone_number', '').strip()
+
+        if not full_name:
+            return Response({
+                'status': 'error',
+                'message': 'Họ và tên không được để trống'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user.full_name = full_name
+        user.email = email
+        user.phone_number = phone_number
+        user.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Cập nhật hồ sơ thành công',
+            'full_name': user.full_name,
+            'email': user.email,
+            'phone_number': user.phone_number or '',
+        }, status=status.HTTP_200_OK)
+
+
+class ChangePasswordAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        current_password = request.data.get('current_password', '').strip()
+        new_password = request.data.get('new_password', '').strip()
+
+        if not current_password or not new_password:
+            return Response({
+                'status': 'error',
+                'message': 'Vui lòng nhập đầy đủ mật khẩu'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(current_password):
+            return Response({
+                'status': 'error',
+                'message': 'Mật khẩu hiện tại không đúng'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as e:
+            return Response({
+                'status': 'error',
+                'message': e.messages[0]
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            'status': 'success',
+            'message': 'Đổi mật khẩu thành công',
+            'token': token.key
+        }, status=status.HTTP_200_OK)
