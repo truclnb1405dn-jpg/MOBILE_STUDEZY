@@ -28,7 +28,7 @@ import retrofit2.Response;
 public class AddClassBottomSheet extends BottomSheetDialogFragment {
 
     private String token;
-    private ScheduleModel scheduleToEdit; // Thêm biến lưu môn học cần sửa
+    private ScheduleModel scheduleToEdit; // Biến lưu môn học cần sửa
     private OnClassAddedListener listener;
 
     public interface OnClassAddedListener {
@@ -53,7 +53,7 @@ public class AddClassBottomSheet extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        TextView tvTitle = view.findViewById(R.id.tv_sheet_title); // Đảm bảo bạn đã đặt ID này trong file XML
+        TextView tvTitle = view.findViewById(R.id.tv_sheet_title);
         EditText etSubject = view.findViewById(R.id.et_subject_name);
         EditText etTime = view.findViewById(R.id.et_start_time);
         EditText etRoom = view.findViewById(R.id.et_room);
@@ -154,7 +154,23 @@ public class AddClassBottomSheet extends BottomSheetDialogFragment {
                     dismiss();
                     if (listener != null) listener.onClassAdded(); // Yêu cầu tải lại list
                 } else {
-                    Toast.makeText(getContext(), "Thất bại, vui lòng thử lại", Toast.LENGTH_SHORT).show();
+                    // === BẮT LỖI TỪ DJANGO VÀ HIỂN THỊ ===
+                    try {
+                        if (response.errorBody() != null) {
+                            // Đọc chuỗi JSON lỗi từ Backend trả về
+                            String errorString = response.errorBody().string();
+                            // Chuyển thành Object để lấy trường "message"
+                            org.json.JSONObject jsonObject = new org.json.JSONObject(errorString);
+                            String errorMessage = jsonObject.getString("message");
+
+                            // Hiển thị câu lỗi chính xác lên màn hình
+                            Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Thất bại, vui lòng thử lại", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(getContext(), "Thất bại, vui lòng thử lại", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
