@@ -105,4 +105,18 @@ public interface ApiService {
             @Path("id") int scheduleId,
             @Body AddScheduleRequest request
     ); 
+    @GET("api/profile/")
+    Call<ProfileResponse> getProfile(@Header("Authorization") String token);
+
+    @PUT("api/update-profile/")
+    Call<UpdateProfileResponse> updateProfile(
+            @Header("Authorization") String token,
+            @Body UpdateProfileRequest request
+    );
+
+    @POST("api/change-password/")
+    Call<ChangePasswordResponse> changePassword(
+            @Header("Authorization") String token,
+            @Body ChangePasswordRequest request
+    );
 }
