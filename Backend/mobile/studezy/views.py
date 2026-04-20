@@ -483,17 +483,34 @@ class AddClassScheduleAPIView(APIView):
         )
 
         try:
+            # Xử lý thời gian và ngày học
             start_time_str = request.data.get('start_time')  # "07:30"
             start_time = datetime.strptime(start_time_str, '%H:%M').time()
+            day_of_week = int(request.data['day_of_week'])
 
-            # Tạm set end_time = start + 1 tiếng (bạn có thể thêm field end_time sau)
-            end_time = (datetime.combine(datetime.min, start_time) + timedelta(hours=1)).time()
+            # === KIỂM TRA TRÙNG LỊCH ===
+            # Tìm xem user này, vào Thứ này, Giờ này đã có môn nào chưa
+            is_conflict = ClassSchedule.objects.filter(
+                user=user,
+                day_of_week=day_of_week,
+                start_time=start_time
+            ).exists()
 
+            if is_conflict:
+                return Response({
+                    'status': 'error',
+                    'message': 'Khung giờ này đã bị trùng với lịch học khác!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            # ============================
+
+            end_time = (datetime.combine(datetime.min, start_time) + timedelta(hours=2, minutes=30)).time()
+
+            # Nếu không trùng, tiến hành tạo mới
             ClassSchedule.objects.create(
                 user=user,
                 semester=semester,
                 subject_name=request.data['subject_name'],
-                day_of_week=int(request.data['day_of_week']),
+                day_of_week=day_of_week,
                 start_time=start_time,
                 end_time=end_time,
                 room=request.data['room'],
@@ -508,7 +525,6 @@ class AddClassScheduleAPIView(APIView):
 
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 class AllClassSchedulesAPIView(APIView):
     authentication_classes = [TokenAuthentication]
