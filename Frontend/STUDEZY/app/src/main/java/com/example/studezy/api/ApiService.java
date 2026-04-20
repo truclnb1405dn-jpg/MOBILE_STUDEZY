@@ -11,6 +11,7 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 import retrofit2.http.Path;
+import retrofit2.http.PUT;
 import retrofit2.http.Query;
 import retrofit2.http.DELETE;
 import java.util.Map;
@@ -82,4 +83,26 @@ public interface ApiService {
             @Header("Authorization") String token,
             @Path("id") int taskId
     );
+    
+   @POST("api/add-class-schedule/")
+    Call<RegisterResponse> addClassSchedule(
+            @Header("Authorization") String token,
+            @Body AddScheduleRequest request
+    );
+
+    @GET("api/class-schedules/")
+    Call<java.util.List<ScheduleModel>> getAllClassSchedules(@Header("Authorization") String token);
+
+    @DELETE("api/class-schedules/{id}/")
+    Call<RegisterResponse> deleteClassSchedule(
+            @Header("Authorization") String token,
+            @Path("id") int scheduleId
+    );
+
+    @PUT("api/class-schedules/{id}/")
+    Call<RegisterResponse> updateClassSchedule(
+            @Header("Authorization") String token,
+            @Path("id") int scheduleId,
+            @Body AddScheduleRequest request
+    ); 
 }
