@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import LoginAPIView, RegisterAPIView, HomeSummaryAPIView, ClassesTodayAPIView, TopDeadlinesAPIView, ClassesByDateAPIView, DeadlinesByDateAPIView, ToggleDeadlineAPIView, TasksAPIView, UpdateTaskStatusAPIView, EditTaskAPIView, DeleteTaskAPIView
+from .views import AddClassScheduleAPIView, AllClassSchedulesAPIView, ClassScheduleDetailAPIView
 
 urlpatterns = [
     path('api/login/', LoginAPIView.as_view(), name='api-login'),
@@ -14,4 +15,7 @@ urlpatterns = [
     path('api/tasks/<int:pk>/update-status/', UpdateTaskStatusAPIView.as_view(), name='api-update-task-status'),
     path('api/tasks/<int:pk>/edit/', EditTaskAPIView.as_view(), name='api-edit-task'),
     path('api/tasks/<int:pk>/delete/', DeleteTaskAPIView.as_view(), name='api-delete-task'),
+    path('api/add-class-schedule/', AddClassScheduleAPIView.as_view(), name='add-class-schedule'),
+    path('api/class-schedules/', AllClassSchedulesAPIView.as_view(), name='api-class-schedules'),
+    path('api/class-schedules/<int:pk>/',ClassScheduleDetailAPIView.as_view()),
 ]
