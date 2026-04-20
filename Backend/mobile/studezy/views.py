@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django.utils import timezone
 from django.contrib.auth import authenticate
-from .models import User, ClassSchedule, Deadline
+from .models import User, ClassSchedule, Deadline, Semester
 from datetime import datetime, timedelta
 
 
@@ -464,3 +464,111 @@ class DeleteTaskAPIView(APIView):
             return Response({'status': 'success', 'message': 'Đã xoá nhiệm vụ'}, status=status.HTTP_200_OK)
         except Deadline.DoesNotExist:
             return Response({'error': 'Không tìm thấy nhiệm vụ'}, status=status.HTTP_404_NOT_FOUND)
+
+class AddClassScheduleAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        # Tự động lấy hoặc tạo semester mặc định (vì form chưa có chọn semester)
+        semester, _ = Semester.objects.get_or_create(
+            user=user,
+            name="Học kỳ 1 - 2025-2026",
+            defaults={
+                'start_date': timezone.now().date(),
+                'end_date': timezone.now().date() + timedelta(days=180)
+            }
+        )
+
+        try:
+            start_time_str = request.data.get('start_time')  # "07:30"
+            start_time = datetime.strptime(start_time_str, '%H:%M').time()
+
+            # Tạm set end_time = start + 1 tiếng (bạn có thể thêm field end_time sau)
+            end_time = (datetime.combine(datetime.min, start_time) + timedelta(hours=1)).time()
+
+            ClassSchedule.objects.create(
+                user=user,
+                semester=semester,
+                subject_name=request.data['subject_name'],
+                day_of_week=int(request.data['day_of_week']),
+                start_time=start_time,
+                end_time=end_time,
+                room=request.data['room'],
+                note=request.data.get('note', ''),
+                color_hex="#4385F4"   # màu chính của app
+            )
+
+            return Response({
+                'status': 'success',
+                'message': 'Thêm lịch học thành công!'
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AllClassSchedulesAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        schedules = ClassSchedule.objects.filter(user=user).order_by('day_of_week', 'start_time')
+
+        data = []
+        for s in schedules:
+            start_str = s.start_time.strftime('%Hh%M').replace('h00', 'h')
+            end_str = s.end_time.strftime('%Hh%M').replace('h00', 'h')
+            data.append({
+                'id': s.id,
+                'subject_name': s.subject_name,
+                'day_of_week': str(s.day_of_week),
+                'time_string': f"{start_str} - {end_str}",
+                'room': s.room,
+                'color_hex': s.color_hex,
+                'note': s.note or ''
+            })
+        return Response(data)
+
+
+class ClassScheduleDetailAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    # Hàm XÓA lịch học
+    def delete(self, request, pk):
+        try:
+            # Tìm môn học dựa vào ID (pk) và phải thuộc về user đang đăng nhập
+            schedule = ClassSchedule.objects.get(pk=pk, user=request.user)
+            schedule.delete()
+            return Response({'status': 'success', 'message': 'Xóa môn học thành công!'})
+        except ClassSchedule.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Không tìm thấy môn học'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Hàm SỬA lịch học
+    def put(self, request, pk):
+        try:
+            schedule = ClassSchedule.objects.get(pk=pk, user=request.user)
+
+            # Cập nhật các trường
+            schedule.subject_name = request.data.get('subject_name', schedule.subject_name)
+            schedule.day_of_week = int(request.data.get('day_of_week', schedule.day_of_week))
+            schedule.room = request.data.get('room', schedule.room)
+            schedule.note = request.data.get('note', schedule.note)
+
+            # Xử lý giờ (nếu có cập nhật)
+            start_time_str = request.data.get('start_time')
+            if start_time_str:
+                schedule.start_time = datetime.strptime(start_time_str, '%H:%M').time()
+                schedule.end_time = (datetime.combine(datetime.min, schedule.start_time) + timedelta(hours=1)).time()
+
+            schedule.save()
+            return Response({'status': 'success', 'message': 'Cập nhật thành công!'})
+
+        except ClassSchedule.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Không tìm thấy môn học'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
