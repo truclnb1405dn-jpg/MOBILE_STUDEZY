@@ -112,6 +112,25 @@
                     app:layout_constraintStart_toEndOf="@+id/iv_calendar_icon"
                     app:layout_constraintTop_toTopOf="parent" />
 
+                <Button
+                    android:id="@+id/btn_add_new_semester"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+ Thêm học kỳ mới"
+                    android:backgroundTint="#1E3A8A"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="20dp"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_card_title"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/group_semester_details"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:constraint_referenced_ids="btn_edit,tv_lbl_start_date,tv_val_start_date,tv_lbl_end_date,tv_val_end_date,tv_lbl_total_weeks,tv_val_total_weeks,tv_lbl_subjects,tv_val_subjects,view_divider,tv_lbl_progress,tv_val_progress,progress_semester" />
+
                 <TextView
                     android:id="@+id/btn_edit"
                     android:layout_width="wrap_content"
@@ -443,14 +462,20 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <!-- Thanh menu-->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_bottom_menu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="0dp"
         app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="20dp"
-        app:cardElevation="8dp">
+        app:cardElevation="8dp"
+        app:strokeWidth="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -463,6 +488,7 @@
             android:paddingBottom="15dp"
             android:weightSum="4">
 
+            <!-- Trang chủ -->
             <LinearLayout
                 android:id="@+id/menu_home"
                 android:layout_width="0dp"
@@ -474,8 +500,11 @@
                 android:orientation="vertical">
 
                 <ImageView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:background="@drawable/ic_home"
+                    android:padding="6dp"
+                    android:contentDescription="Trang chủ"
                     android:src="@drawable/ic_home" />
 
                 <TextView
@@ -483,11 +512,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Trang chủ"
-                    android:textColor="#8A8A8A"
+                    android:textColor="#1E3A8A"
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <!-- Lịch -->
             <LinearLayout
                 android:id="@+id/menu_schedule"
                 android:layout_width="0dp"
@@ -500,8 +530,11 @@
 
                 <ImageView
                     android:layout_width="34dp"
+                    android:padding="6dp"
                     android:layout_height="34dp"
-                    android:src="@drawable/ic_calendar" />
+                    android:contentDescription="Lịch"
+                    android:src="@drawable/ic_calendar"
+                    android:background="@drawable/bg_tab_selected"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -513,6 +546,7 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <!-- Nhiệm vụ -->
             <LinearLayout
                 android:id="@+id/menu_task"
                 android:layout_width="0dp"
@@ -526,6 +560,7 @@
                 <ImageView
                     android:layout_width="34dp"
                     android:layout_height="34dp"
+                    android:contentDescription="Nhiệm vụ"
                     android:src="@drawable/ic_assignment" />
 
                 <TextView
@@ -538,6 +573,7 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <!-- Cài đặt -->
             <LinearLayout
                 android:id="@+id/menu_settings"
                 android:layout_width="0dp"
@@ -551,6 +587,8 @@
                 <ImageView
                     android:layout_width="34dp"
                     android:layout_height="34dp"
+                    android:contentDescription="Cài đặt"
+                    android:background="@drawable/ic_settings"
                     android:src="@drawable/ic_settings" />
 
                 <TextView

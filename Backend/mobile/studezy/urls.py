@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import LoginAPIView, RegisterAPIView, HomeSummaryAPIView, ClassesTodayAPIView, TopDeadlinesAPIView, ClassesByDateAPIView, DeadlinesByDateAPIView, ToggleDeadlineAPIView, TasksAPIView, UpdateTaskStatusAPIView, EditTaskAPIView, DeleteTaskAPIView
-from .views import AddClassScheduleAPIView, AllClassSchedulesAPIView, ClassScheduleDetailAPIView, ProfileAPIView, UpdateProfileAPIView, ChangePasswordAPIView
+from .views import AddClassScheduleAPIView, AllClassSchedulesAPIView, ClassScheduleDetailAPIView, ProfileAPIView, UpdateProfileAPIView, ChangePasswordAPIView, SemesterAPIView
 
 urlpatterns = [
     path('api/login/', LoginAPIView.as_view(), name='api-login'),
@@ -21,4 +21,5 @@ urlpatterns = [
     path('api/profile/', ProfileAPIView.as_view(), name='api-profile'),
     path('api/update-profile/', UpdateProfileAPIView.as_view(), name='api-update-profile'),
     path('api/change-password/', ChangePasswordAPIView.as_view(), name='api-change-password'),
+    path('api/semester/', SemesterAPIView.as_view(), name='api-semester'),
 ]

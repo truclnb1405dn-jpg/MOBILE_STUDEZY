@@ -1,12 +1,18 @@
 package com.example.studezy;
 
+import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,12 +23,20 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.studezy.api.AddSemesterRequest;
 import com.example.studezy.api.RegisterResponse;
 import com.example.studezy.api.RetrofitClient;
 import com.example.studezy.api.ScheduleModel;
+import com.example.studezy.api.SemesterModel;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -52,6 +66,12 @@ public class ScheduleFragment extends Fragment {
         token = prefs.getString("USER_TOKEN", "");
 
         // 1. NÚT THÊM MỚI
+        View btnBack = view.findViewById(R.id.btn_back);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v ->
+                    Navigation.findNavController(view).navigate(R.id.homeFragment)
+            );
+        }
         View btnAddNew = view.findViewById(R.id.btn_add_new);
         if (btnAddNew != null) {
             btnAddNew.setOnClickListener(v -> {
@@ -59,7 +79,6 @@ public class ScheduleFragment extends Fragment {
                     Toast.makeText(getContext(), "Bạn chưa đăng nhập", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                // CHÚ Ý: Truyền 'null' vào giữa vì đây là Thêm Mới
                 AddClassBottomSheet bottomSheet = AddClassBottomSheet.newInstance(token, null, this::loadSchedules);
                 bottomSheet.show(getParentFragmentManager(), "AddClassBottomSheet");
             });
@@ -70,18 +89,15 @@ public class ScheduleFragment extends Fragment {
         if (rvSchedules != null) {
             rvSchedules.setLayoutManager(new LinearLayoutManager(getContext()));
 
-            // Khởi tạo Adapter với Interface lắng nghe sự kiện
             adapter = new ScheduleAdapter(new ScheduleAdapter.OnItemClickListener() {
                 @Override
                 public void onEditClick(ScheduleModel schedule) {
-                    // Mở BottomSheet và truyền dữ liệu môn học vào để SỬA
                     AddClassBottomSheet bottomSheet = AddClassBottomSheet.newInstance(token, schedule, () -> loadSchedules());
                     bottomSheet.show(getParentFragmentManager(), "EditClassBottomSheet");
                 }
 
                 @Override
                 public void onDeleteClick(ScheduleModel schedule) {
-                    // Hiển thị hộp thoại xác nhận Xóa
                     showDeleteDialog(schedule);
                 }
             });
@@ -89,7 +105,6 @@ public class ScheduleFragment extends Fragment {
             rvSchedules.setAdapter(adapter);
         }
 
-        // Khởi tạo sự kiện click cho các tab Thứ
         setupTabClickListeners(view);
 
         // Menu chuyển trang
@@ -100,28 +115,185 @@ public class ScheduleFragment extends Fragment {
         view.findViewById(R.id.menu_settings).setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.settingsFragment));
 
-        // Tải dữ liệu lịch học
+        // Tải dữ liệu
         if (!token.isEmpty()) {
             loadSchedules();
         }
     }
 
+    private void updateSemesterUI(String semesterName, String startDateStr, String endDateStr, int subjectCount) {
+        View view = getView();
+        if (view == null) return;
+
+        View groupDetails = view.findViewById(R.id.group_semester_details);
+        Button btnAddSemester = view.findViewById(R.id.btn_add_new_semester);
+        TextView tvSubtitle = view.findViewById(R.id.tv_subtitle);
+
+        if (startDateStr == null || endDateStr == null) {
+            if (groupDetails != null) groupDetails.setVisibility(View.GONE);
+            if (btnAddSemester != null) {
+                btnAddSemester.setVisibility(View.VISIBLE);
+                btnAddSemester.setOnClickListener(v -> showAddSemesterDialog());
+            }
+            if (tvSubtitle != null) tvSubtitle.setText("Chưa có thông tin học kỳ");
+            return;
+        }
+
+        if (groupDetails != null) groupDetails.setVisibility(View.VISIBLE);
+        if (btnAddSemester != null) btnAddSemester.setVisibility(View.GONE);
+
+        if (tvSubtitle != null) tvSubtitle.setText(semesterName);
+
+        TextView tvStartDate = view.findViewById(R.id.tv_val_start_date);
+        TextView tvEndDate = view.findViewById(R.id.tv_val_end_date);
+        TextView tvTotalWeeks = view.findViewById(R.id.tv_val_total_weeks);
+        TextView tvSubjects = view.findViewById(R.id.tv_val_subjects);
+        TextView tvProgressText = view.findViewById(R.id.tv_val_progress);
+        ProgressBar progressBar = view.findViewById(R.id.progress_semester);
+
+        if (tvStartDate != null) tvStartDate.setText(startDateStr);
+        if (tvEndDate != null) tvEndDate.setText(endDateStr);
+        if (tvSubjects != null) tvSubjects.setText(subjectCount + " môn");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        try {
+            Date startDate = sdf.parse(startDateStr);
+            Date endDate = sdf.parse(endDateStr);
+            Date today = new Date();
+
+            if (startDate != null && endDate != null) {
+                long diffInMillies = endDate.getTime() - startDate.getTime();
+                long totalDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+                int totalWeeks = (int) Math.ceil(totalDays / 7.0);
+                if (tvTotalWeeks != null) tvTotalWeeks.setText(totalWeeks + " tuần");
+
+                long elapsedMillies = today.getTime() - startDate.getTime();
+                if (elapsedMillies < 0) elapsedMillies = 0;
+                if (elapsedMillies > diffInMillies) elapsedMillies = diffInMillies;
+
+                float progressPercentage = (float) elapsedMillies / diffInMillies * 100;
+
+                if (tvProgressText != null) tvProgressText.setText(String.format(Locale.getDefault(), "%.1f%% đã hoàn thành", progressPercentage));
+                if (progressBar != null) progressBar.setProgress((int) progressPercentage);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showAddSemesterDialog() {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_add_semester);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        EditText edtName = dialog.findViewById(R.id.edt_semester_name);
+        TextView tvStartDate = dialog.findViewById(R.id.tv_select_start_date);
+        TextView tvEndDate = dialog.findViewById(R.id.tv_select_end_date);
+
+        Calendar startCalendar = Calendar.getInstance();
+        Calendar endCalendar = Calendar.getInstance();
+
+        tvStartDate.setOnClickListener(v -> {
+            new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
+                startCalendar.set(year, month, dayOfMonth);
+                String date = String.format(Locale.getDefault(), "%02d/%02d/%d", dayOfMonth, month + 1, year);
+                tvStartDate.setText(date);
+            }, startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
+        tvEndDate.setOnClickListener(v -> {
+            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
+                endCalendar.set(year, month, dayOfMonth);
+                String date = String.format(Locale.getDefault(), "%02d/%02d/%d", dayOfMonth, month + 1, year);
+                tvEndDate.setText(date);
+            }, endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH));
+
+            datePickerDialog.getDatePicker().setMinDate(startCalendar.getTimeInMillis());
+            datePickerDialog.show();
+        });
+
+        dialog.findViewById(R.id.btn_cancel_semester).setOnClickListener(v -> dialog.dismiss());
+
+        dialog.findViewById(R.id.btn_save_semester).setOnClickListener(v -> {
+            String name = edtName.getText().toString().trim();
+            String startDate = tvStartDate.getText().toString();
+            String endDate = tvEndDate.getText().toString();
+
+            if (name.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Gọi API Lưu học kỳ mới
+            AddSemesterRequest requestObj = new AddSemesterRequest(name, startDate, endDate);
+            RetrofitClient.getInstance().getApi().createSemester("Token " + token, requestObj)
+                    .enqueue(new Callback<SemesterModel>() {
+                        @Override
+                        public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                dialog.dismiss();
+                                Toast.makeText(getContext(), "Đã thêm học kỳ mới", Toast.LENGTH_SHORT).show();
+                                SemesterModel newSem = response.body();
+                                updateSemesterUI(newSem.getName(), newSem.getStartDate(), newSem.getEndDate(), fullScheduleList.size());
+                            } else {
+                                Toast.makeText(getContext(), "Lỗi khi tạo học kỳ", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<SemesterModel> call, Throwable t) {
+                            Toast.makeText(getContext(), "Lỗi mạng", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+
+        dialog.show(); // Dòng này bị thiếu đã được thêm lại
+    }
+
     private void loadSchedules() {
         if (rvSchedules == null) return;
 
+        // BƯỚC 1: Gọi API lấy danh sách Môn học
         RetrofitClient.getInstance().getApi().getAllClassSchedules("Token " + token)
                 .enqueue(new Callback<List<ScheduleModel>>() {
                     @Override
                     public void onResponse(Call<List<ScheduleModel>> call, Response<List<ScheduleModel>> response) {
                         if (response.isSuccessful() && response.body() != null) {
-                            // Lưu toàn bộ danh sách vào biến tổng
                             fullScheduleList = response.body();
-
-                            // Cập nhật số đếm trên các Tab
                             updateDayTabsCount(fullScheduleList);
-
-                            // Lọc danh sách theo ngày đang được chọn (mặc định là Thứ 2)
                             filterSchedulesByDay(currentSelectedDay);
+
+                            // BƯỚC 2: Gọi API lấy Thông tin Học kỳ
+                            RetrofitClient.getInstance().getApi().getCurrentSemester("Token " + token)
+                                    .enqueue(new Callback<SemesterModel>() {
+                                        @Override
+                                        public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
+                                            if (response.isSuccessful() && response.body() != null) {
+                                                SemesterModel sem = response.body();
+                                                if ("success".equals(sem.getStatus())) {
+                                                    updateSemesterUI(sem.getName(), sem.getStartDate(), sem.getEndDate(), fullScheduleList.size());
+                                                } else {
+                                                    // Trường hợp status = "not_found" (Chưa có học kỳ)
+                                                    updateSemesterUI(null, null, null, 0);
+                                                }
+                                            } else {
+                                                // NẾU API TRẢ VỀ LỖI (Ví dụ 404, 500)
+                                                Toast.makeText(getContext(), "Lỗi API Semester: " + response.code(), Toast.LENGTH_LONG).show();
+                                                updateSemesterUI(null, null, null, 0); // Vẫn gọi hàm này để ẩn giao diện fix cứng đi
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<SemesterModel> call, Throwable t) {
+                                            // NẾU LỖI MẠNG HOẶC SAI ĐỊNH DẠNG JSON
+                                            Toast.makeText(getContext(), "Lỗi kết nối Semester: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                                            updateSemesterUI(null, null, null, 0);
+                                        }
+                                    });
                         } else {
                             Toast.makeText(getContext(), "Không tải được danh sách", Toast.LENGTH_SHORT).show();
                         }
@@ -134,7 +306,6 @@ public class ScheduleFragment extends Fragment {
                 });
     }
 
-    // === HÀM THIẾT LẬP SỰ KIỆN CLICK CHUYỂN TAB ===
     private void setupTabClickListeners(View view) {
         TextView[] tabs = {
                 view.findViewById(R.id.tab_monday),
@@ -172,7 +343,6 @@ public class ScheduleFragment extends Fragment {
         }
     }
 
-    // === HÀM LỌC DANH SÁCH THEO NGÀY ===
     private void filterSchedulesByDay(String dayValue) {
         List<ScheduleModel> filteredList = new ArrayList<>();
 
@@ -187,7 +357,6 @@ public class ScheduleFragment extends Fragment {
         }
     }
 
-    // === HÀM ĐẾM SỐ LƯỢNG MÔN TRÊN TAB ===
     private void updateDayTabsCount(List<ScheduleModel> schedules) {
         View view = getView();
         if (view == null) return;
@@ -229,7 +398,6 @@ public class ScheduleFragment extends Fragment {
         }
     }
 
-    // 3. HÀM HIỂN THỊ DIALOG XÓA VÀ GỌI API XÓA MÔN HỌC
     private void showDeleteDialog(ScheduleModel schedule) {
         android.app.Dialog dialog = new android.app.Dialog(getContext());
         dialog.setContentView(R.layout.dialog_delete_class);
@@ -243,7 +411,6 @@ public class ScheduleFragment extends Fragment {
         dialog.findViewById(R.id.btn_cancel_delete).setOnClickListener(v -> dialog.dismiss());
 
         dialog.findViewById(R.id.btn_confirm_delete).setOnClickListener(v -> {
-            // Gọi API Xóa
             RetrofitClient.getInstance().getApi().deleteClassSchedule("Token " + token, schedule.getId())
                     .enqueue(new Callback<RegisterResponse>() {
                         @Override
@@ -251,7 +418,7 @@ public class ScheduleFragment extends Fragment {
                             if (response.isSuccessful()) {
                                 Toast.makeText(getContext(), "Đã xóa môn học", Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
-                                loadSchedules(); // Tải lại danh sách sau khi xóa thành công
+                                loadSchedules();
                             } else {
                                 Toast.makeText(getContext(), "Xóa thất bại", Toast.LENGTH_SHORT).show();
                             }

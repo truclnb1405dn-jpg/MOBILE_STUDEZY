@@ -119,4 +119,10 @@ public interface ApiService {
             @Header("Authorization") String token,
             @Body ChangePasswordRequest request
     );
+
+    @GET("api/semester/")
+    Call<SemesterModel> getCurrentSemester(@Header("Authorization") String token);
+
+    @POST("api/semester/")
+    Call<SemesterModel> createSemester(@Header("Authorization") String token, @Body AddSemesterRequest request);
 }

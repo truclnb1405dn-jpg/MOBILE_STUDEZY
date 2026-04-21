@@ -677,3 +677,50 @@ class ChangePasswordAPIView(APIView):
             'message': 'Đổi mật khẩu thành công',
             'token': token.key
         }, status=status.HTTP_200_OK)
+
+# Tạo học kì mới
+class SemesterAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Lấy học kỳ mới nhất của user
+        semester = Semester.objects.filter(user=request.user).order_by('-id').first()
+        if semester:
+            return Response({
+                'status': 'success',
+                'id': semester.id,
+                'name': semester.name,
+                'start_date': semester.start_date.strftime('%d/%m/%Y'),
+                'end_date': semester.end_date.strftime('%d/%m/%Y'),
+            }, status=status.HTTP_200_OK)
+        return Response({'status': 'not_found', 'message': 'Chưa có học kỳ'})
+
+    def post(self, request):
+        name = request.data.get('name')
+        start_date_str = request.data.get('start_date')  # Android gửi lên dd/MM/yyyy
+        end_date_str = request.data.get('end_date')
+
+        if not name or not start_date_str or not end_date_str:
+            return Response({'error': 'Thiếu thông tin'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            start_date = datetime.strptime(start_date_str, '%d/%m/%Y').date()
+            end_date = datetime.strptime(end_date_str, '%d/%m/%Y').date()
+
+            semester = Semester.objects.create(
+                user=request.user,
+                name=name,
+                start_date=start_date,
+                end_date=end_date
+            )
+            return Response({
+                'status': 'success',
+                'message': 'Tạo học kỳ thành công',
+                'id': semester.id,
+                'name': semester.name,
+                'start_date': start_date.strftime('%d/%m/%Y'),
+                'end_date': end_date.strftime('%d/%m/%Y'),
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
