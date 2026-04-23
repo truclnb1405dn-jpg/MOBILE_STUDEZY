@@ -1,5 +1,6 @@
 package com.example.studezy;
 
+import androidx.fragment.app.DialogFragment;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,7 +18,6 @@ import com.example.studezy.api.AddScheduleRequest;
 import com.example.studezy.api.RegisterResponse;
 import com.example.studezy.api.RetrofitClient;
 import com.example.studezy.api.ScheduleModel;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.Locale;
 
@@ -25,7 +25,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AddClassBottomSheet extends BottomSheetDialogFragment {
+public class AddClassBottomSheet extends DialogFragment {
 
     private String token;
     private int semesterId;
@@ -181,5 +181,18 @@ public class AddClassBottomSheet extends BottomSheetDialogFragment {
                 Toast.makeText(getContext(), "Lỗi mạng", Toast.LENGTH_SHORT).show();
             }
         };
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (getDialog() != null && getDialog().getWindow() != null) {
+            getDialog().getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+            int width = (int)(getResources().getDisplayMetrics().widthPixels * 0.90);
+            getDialog().getWindow().setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+
+            getDialog().getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
     }
 }
