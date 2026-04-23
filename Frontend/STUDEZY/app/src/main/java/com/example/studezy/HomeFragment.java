@@ -13,6 +13,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
 import java.util.List;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -24,6 +26,7 @@ import com.example.studezy.api.ClassModel;
 import com.example.studezy.api.DeadlineModel;
 import com.example.studezy.api.HomeSummaryResponse;
 import com.example.studezy.api.RetrofitClient;
+import com.example.studezy.api.SemesterModel;
 import com.example.studezy.api.UpdateStatusRequest;
 
 import okhttp3.ResponseBody;
@@ -174,26 +177,41 @@ public class HomeFragment extends Fragment {
     }
 
     // Hàm gọi dữ liệu khi click vào một ngày cụ thể trên Lịch
+    // Hàm gọi dữ liệu khi click vào một ngày cụ thể trên Lịch
     private void fetchDataForSelectedDate(String dateStr) {
         if (userToken == null || userToken.isEmpty()) return;
         String authHeader = "Token " + userToken;
 
-        // 1. Load Lịch Học
-        RetrofitClient.getInstance().getApi().getClassesByDate(authHeader, dateStr).enqueue(new Callback<List<ClassModel>>() {
+        // --- PHẦN LỊCH HỌC: Chỉ hiển thị nếu có học kỳ ---
+        RetrofitClient.getInstance().getApi().getCurrentSemester(authHeader).enqueue(new Callback<SemesterModel>() {
             @Override
-            public void onResponse(Call<List<ClassModel>> call, Response<List<ClassModel>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ClassAdapter adapter = new ClassAdapter(response.body());
-                    rvClasses.setAdapter(adapter);
+            public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
+                if (response.isSuccessful() && response.body() != null && "success".equals(response.body().getStatus())) {
+
+                    RetrofitClient.getInstance().getApi().getClassesByDate(authHeader, dateStr).enqueue(new Callback<List<ClassModel>>() {
+                        @Override
+                        public void onResponse(Call<List<ClassModel>> call, Response<List<ClassModel>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                ClassHomeAdapter adapter = new ClassHomeAdapter(response.body(), classModel -> showDetailClassPopup(classModel));
+                                rvClasses.setAdapter(adapter);
+                            }
+                        }
+                        @Override
+                        public void onFailure(Call<List<ClassModel>> call, Throwable t) { }
+                    });
+
+                } else {
+                    rvClasses.setAdapter(new ClassHomeAdapter(new ArrayList<>(), null));
                 }
             }
+
             @Override
-            public void onFailure(Call<List<ClassModel>> call, Throwable t) {
-                // Xử lý lỗi
+            public void onFailure(Call<SemesterModel> call, Throwable t) {
+                rvClasses.setAdapter(new ClassHomeAdapter(new ArrayList<>(), null));
             }
         });
 
-        // 2. Load Deadline (Mọi logic ưu tiên đã được Django xử lý)
+        // --- PHẦN DEADLINE: GIỮ NGUYÊN TUYỆT ĐỐI ---
         RetrofitClient.getInstance().getApi().getDeadlinesByDate(authHeader, dateStr).enqueue(new Callback<List<DeadlineModel>>() {
             @Override
             public void onResponse(Call<List<DeadlineModel>> call, Response<List<DeadlineModel>> response) {
@@ -205,9 +223,7 @@ public class HomeFragment extends Fragment {
                 }
             }
             @Override
-            public void onFailure(Call<List<DeadlineModel>> call, Throwable t) {
-                // Xử lý lỗi
-            }
+            public void onFailure(Call<List<DeadlineModel>> call, Throwable t) { }
         });
     }
 
@@ -252,17 +268,35 @@ public class HomeFragment extends Fragment {
 
     private void fetchClassesToday(String token) {
         String authHeader = "Token " + token;
-        RetrofitClient.getInstance().getApi().getClassesToday(authHeader).enqueue(new Callback<List<ClassModel>>() {
+
+        // Kiểm tra xem có học kỳ nào không trước khi tải lịch
+        RetrofitClient.getInstance().getApi().getCurrentSemester(authHeader).enqueue(new Callback<SemesterModel>() {
             @Override
-            public void onResponse(Call<List<ClassModel>> call, Response<List<ClassModel>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ClassAdapter adapter = new ClassAdapter(response.body());
-                    rvClasses.setAdapter(adapter);
+            public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
+                // Chỉ cần Backend trả về success (nghĩa là có học kỳ) thì tải lịch học
+                if (response.isSuccessful() && response.body() != null && "success".equals(response.body().getStatus())) {
+
+                    RetrofitClient.getInstance().getApi().getClassesToday(authHeader).enqueue(new Callback<List<ClassModel>>() {
+                        @Override
+                        public void onResponse(Call<List<ClassModel>> call, Response<List<ClassModel>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                ClassHomeAdapter adapter = new ClassHomeAdapter(response.body(), classModel -> showDetailClassPopup(classModel));
+                                rvClasses.setAdapter(adapter);
+                            }
+                        }
+                        @Override
+                        public void onFailure(Call<List<ClassModel>> call, Throwable t) { }
+                    });
+
+                } else {
+                    // Nếu không có học kỳ, xóa trắng danh sách lịch học
+                    rvClasses.setAdapter(new ClassHomeAdapter(new ArrayList<>(), null));
                 }
             }
+
             @Override
-            public void onFailure(Call<List<ClassModel>> call, Throwable t) {
-                Toast.makeText(getContext(), "Lỗi tải lịch học", Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<SemesterModel> call, Throwable t) {
+                rvClasses.setAdapter(new ClassHomeAdapter(new ArrayList<>(), null));
             }
         });
     }
@@ -334,5 +368,17 @@ public class HomeFragment extends Fragment {
         if (scrollView != null) {
             scrollView.smoothScrollTo(0, 0);
         }
+    }
+    private void showDetailClassPopup(ClassModel classModel) {
+        if (userToken == null || userToken.isEmpty()) {
+            Toast.makeText(getContext(), "Bạn chưa đăng nhập", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Khởi tạo popup xem chi tiết với dữ liệu môn học đã chọn
+        DetailClassBottomSheet detailSheet = DetailClassBottomSheet.newInstance(classModel);
+
+        // Hiển thị popup lên màn hình
+        detailSheet.show(getParentFragmentManager(), "DetailClassBottomSheet");
     }
 }

@@ -77,6 +77,7 @@ class HomeSummaryAPIView(APIView):
             'deadlines_today': deadlines_today
         })
 
+
 class ClassesTodayAPIView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -86,19 +87,32 @@ class ClassesTodayAPIView(APIView):
         now = timezone.localtime(timezone.now())
         django_weekday = now.weekday() + 2
 
-        classes = ClassSchedule.objects.filter(user=user, day_of_week=django_weekday).order_by('start_time')
+        # BƯỚC 1: Tìm học kỳ hiện tại/mới nhất của user
+        semester = Semester.objects.filter(user=user).order_by('-id').first()
+
+        # Nếu chưa có học kỳ thì trả về danh sách rỗng ngay lập tức
+        if not semester:
+            return Response([])
+
+        # BƯỚC 2: Chỉ lọc các môn học thuộc học kỳ này
+        classes = ClassSchedule.objects.filter(
+            user=user,
+            semester=semester,
+            day_of_week=django_weekday
+        ).order_by('start_time')
 
         data = []
         for c in classes:
             start_str = c.start_time.strftime('%Hh%M').replace('h00', 'h')
             end_str = c.end_time.strftime('%Hh%M').replace('h00', 'h')
-
             data.append({
-                'subject_name': c.subject_name,  # Tên trường này phụ thuộc vào models.py của bạn
+                'id': c.id,
+                'subject_name': c.subject_name,
                 'room': c.room,
-                'time_string': f"Giờ  •  {start_str} - {end_str}"
+                'time_string': f"Giờ  •  {start_str} - {end_str}",
+                'day_of_week': str(c.day_of_week),
+                'note': c.note or ''
             })
-
         return Response(data)
 
 class TopDeadlinesAPIView(APIView):
@@ -153,29 +167,36 @@ class ClassesByDateAPIView(APIView):
             return Response({"error": "Thiếu tham số ngày (date)"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Chuyển đổi chuỗi "YYYY-MM-DD" từ Android thành object date của Python
             target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
         except ValueError:
             return Response({"error": "Sai định dạng ngày."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Tính toán thứ trong tuần cho ngày được chọn (weekday() trả về 0: Thứ 2 -> 6: Chủ nhật)
-        # Cộng thêm 2 để khớp với logic DAY_CHOICES của bạn (2: Thứ 2 -> 8: Chủ nhật)
         django_weekday = target_date.weekday() + 2
 
-        # Lọc các môn học của thứ đó
-        classes = ClassSchedule.objects.filter(user=user, day_of_week=django_weekday).order_by('start_time')
+        # BƯỚC 1: Tìm học kỳ hiện tại/mới nhất
+        semester = Semester.objects.filter(user=user).order_by('-id').first()
+        if not semester:
+            return Response([])
+
+        # BƯỚC 2: Chỉ lọc các môn học thuộc học kỳ này
+        classes = ClassSchedule.objects.filter(
+            user=user,
+            semester=semester,
+            day_of_week=django_weekday
+        ).order_by('start_time')
 
         data = []
         for c in classes:
             start_str = c.start_time.strftime('%Hh%M').replace('h00', 'h')
             end_str = c.end_time.strftime('%Hh%M').replace('h00', 'h')
-
             data.append({
+                'id': c.id,
                 'subject_name': c.subject_name,
                 'room': c.room,
-                'time_string': f"Giờ  •  {start_str} - {end_str}"
+                'time_string': f"Giờ  •  {start_str} - {end_str}",
+                'day_of_week': str(c.day_of_week),
+                'note': c.note or ''
             })
-
         return Response(data)
 
 

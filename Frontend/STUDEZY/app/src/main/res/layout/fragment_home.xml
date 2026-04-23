@@ -380,7 +380,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:nestedScrollingEnabled="false"
-                tools:listitem="@layout/item_class" />
+                tools:listitem="@layout/item_class_home" />
 
             <!-- SECTION: DEADLINE -->
             <androidx.constraintlayout.widget.ConstraintLayout

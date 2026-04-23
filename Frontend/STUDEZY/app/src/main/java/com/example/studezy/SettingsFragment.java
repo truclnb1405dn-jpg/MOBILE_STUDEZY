@@ -95,14 +95,6 @@ public class SettingsFragment extends Fragment {
            navController.navigate(R.id.homeFragment);
        });
 
-
-       btnBack.setOnClickListener(v -> {
-           if (!navController.popBackStack()) {
-               requireActivity().onBackPressed();
-           }
-       });
-
-
        layoutEditProfile.setOnClickListener(v -> showEditProfileDialog());
        layoutChangePassword.setOnClickListener(v -> showChangePasswordDialog());
        btnLogout.setOnClickListener(v -> showLogoutDialog());

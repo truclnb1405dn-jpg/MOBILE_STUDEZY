@@ -54,7 +54,8 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:layout_marginEnd="6dp"
-                    android:src="@drawable/ic_calendar" />
+                    android:src="@drawable/ic_calendar"
+                    app:tint="#8B8B8B" />
 
                 <TextView
                     android:id="@+id/tv_deadline_time"
