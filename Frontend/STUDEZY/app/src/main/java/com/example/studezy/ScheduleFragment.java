@@ -349,20 +349,26 @@ public class ScheduleFragment extends Fragment {
                     // Xử lý khi người dùng chọn item trong Dropdown
                     autoCompleteSemester.setOnItemClickListener((parent, view, position, id) -> {
                         if (position == 0) {
-                            // CẬP NHẬT: Nếu chọn mục "+ Tạo học kỳ mới" (index 0)
-                            dialog.dismiss(); // Đóng popup chỉnh sửa hiện tại
-                            showAddSemesterDialog(); // Mở popup tạo học kỳ mới
-                        } else {
-                            // CẬP NHẬT: Nếu chọn học kỳ bình thường (position - 1 vì index 0 là nút Tạo mới)
-                            SemesterModel selected = semesterList.get(position - 1);
-                            edtStartDate.setText(selected.getStartDate());
-                            edtEndDate.setText(selected.getEndDate());
 
-                            // Cập nhật lại ID cho nút Save tương ứng với Học kỳ vừa chọn
+                            dialog.dismiss();
+                            showAddSemesterDialog();
+                        } else {
+
+                            SemesterModel selected = semesterList.get(position - 1);
+
                             Object tagObj = selected.getId();
                             if(tagObj != null) {
                                 int selectedId = tagObj instanceof Number ? ((Number) tagObj).intValue() : Integer.parseInt(tagObj.toString());
-                                btnSave.setTag(selectedId);
+
+
+                                currentSemesterId = selectedId;
+                                currentSemesterInfo = selected;
+
+
+                                fetchClassSchedules();
+
+
+                                dialog.dismiss();
                             }
                         }
                     });
@@ -417,13 +423,14 @@ public class ScheduleFragment extends Fragment {
                         SemesterModel updatedSemester = response.body();
                         currentSemesterInfo = updatedSemester;
 
-                        updateSemesterUI(updatedSemester.getName(),
-                                updatedSemester.getStartDate(),
-                                updatedSemester.getEndDate(),
-                                fullScheduleList.size());
+                        Object idObj = updatedSemester.getId();
+                        if (idObj != null) {
+                            currentSemesterId = idObj instanceof Number ? ((Number) idObj).intValue() : Integer.parseInt(idObj.toString());
+                        }
+
+                        fetchClassSchedules();
 
                     } else {
-                        // --- CẬP NHẬT ĐỂ ĐỌC LỖI TỪ BACKEND ---
                         try {
                             String errorBody = response.errorBody().string();
                             JSONObject jsonObject = new JSONObject(errorBody);
@@ -456,7 +463,46 @@ public class ScheduleFragment extends Fragment {
     private void loadSchedules() {
         if (rvSchedules == null) return;
 
-        // BƯỚC 1: Gọi API lấy danh sách Môn học
+        RetrofitClient.getInstance().getApi().getSemesters("Token " + token)
+                .enqueue(new Callback<List<SemesterModel>>() {
+                    @Override
+                    public void onResponse(Call<List<SemesterModel>> call, Response<List<SemesterModel>> response) {
+                        if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                            List<SemesterModel> list = response.body();
+                            boolean found = false;
+
+                            for (SemesterModel sem : list) {
+                                int semId = ((Number) sem.getId()).intValue();
+                                if (semId == currentSemesterId) {
+                                    currentSemesterInfo = sem;
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found) {
+                                currentSemesterInfo = list.get(0);
+                                currentSemesterId = ((Number) currentSemesterInfo.getId()).intValue();
+                            }
+
+                            updateSemesterUI(currentSemesterInfo.getName(), currentSemesterInfo.getStartDate(),
+                                    currentSemesterInfo.getEndDate(), fullScheduleList.size());
+
+                            fetchClassSchedules();
+                        } else {
+
+                            updateSemesterUI(null, null, null, 0);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<SemesterModel>> call, Throwable t) {
+                        Toast.makeText(getContext(), "Lỗi tải thông tin học kỳ", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void fetchClassSchedules() {
         RetrofitClient.getInstance().getApi().getAllClassSchedules("Token " + token, currentSemesterId)
                 .enqueue(new Callback<List<ScheduleModel>>() {
                     @Override
@@ -464,44 +510,19 @@ public class ScheduleFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null) {
                             fullScheduleList = response.body();
                             updateDayTabsCount(fullScheduleList);
-                            filterSchedulesByDay(currentSelectedDay);
+                            filterSchedulesByDay(currentSelectedDay); // Cập nhật danh sách môn và thông báo trống
 
-                            // BƯỚC 2: Gọi API lấy Thông tin Học kỳ
-                            RetrofitClient.getInstance().getApi().getCurrentSemester("Token " + token)
-                                    .enqueue(new Callback<SemesterModel>() {
-                                        @Override
-                                        public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
-                                            if (response.isSuccessful() && response.body() != null) {
-                                                SemesterModel sem = response.body();
-                                                if ("success".equals(sem.getStatus()) || sem.getStatus() == null) {
-                                                    currentSemesterInfo = sem; // LƯU VÀO BIẾN GLOBAL
-                                                    updateSemesterUI(sem.getName(), sem.getStartDate(), sem.getEndDate(), fullScheduleList.size());
-                                                } else {
-                                                    currentSemesterInfo = null;
-                                                    updateSemesterUI(null, null, null, 0);
-                                                }
-                                            } else {
-                                                currentSemesterInfo = null;
-                                                Toast.makeText(getContext(), "Lỗi API Semester: " + response.code(), Toast.LENGTH_LONG).show();
-                                                updateSemesterUI(null, null, null, 0);
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onFailure(Call<SemesterModel> call, Throwable t) {
-                                            currentSemesterInfo = null;
-                                            Toast.makeText(getContext(), "Lỗi kết nối Semester: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                                            updateSemesterUI(null, null, null, 0);
-                                        }
-                                    });
-                        } else {
-                            Toast.makeText(getContext(), "Không tải được danh sách", Toast.LENGTH_SHORT).show();
+                            // Cập nhật lại số môn học trên thẻ thông tin
+                            if (currentSemesterInfo != null) {
+                                updateSemesterUI(currentSemesterInfo.getName(), currentSemesterInfo.getStartDate(),
+                                        currentSemesterInfo.getEndDate(), fullScheduleList.size());
+                            }
                         }
                     }
 
                     @Override
                     public void onFailure(Call<List<ScheduleModel>> call, Throwable t) {
-                        Toast.makeText(getContext(), "Lỗi kết nối server", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Lỗi kết nối lịch học", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -545,14 +566,20 @@ public class ScheduleFragment extends Fragment {
 
     private void filterSchedulesByDay(String dayValue) {
         List<ScheduleModel> filteredList = new ArrayList<>();
-
         for (ScheduleModel item : fullScheduleList) {
             if (dayValue.equals(item.getDayOfWeek())) {
                 filteredList.add(item);
             }
         }
 
-        if (adapter != null) {
+        TextView tvEmpty = getView().findViewById(R.id.tv_empty_message);
+
+        if (filteredList.isEmpty()) {
+            rvSchedules.setVisibility(View.GONE);
+            if (tvEmpty != null) tvEmpty.setVisibility(View.VISIBLE);
+        } else {
+            rvSchedules.setVisibility(View.VISIBLE);
+            if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
             adapter.updateData(filteredList);
         }
     }
