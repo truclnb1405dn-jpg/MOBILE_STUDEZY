@@ -7,31 +7,23 @@
     android:layout_marginHorizontal="16dp"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
-    android:background="@drawable/bg_card_white"
-    android:padding="16dp"
-    android:elevation="3dp">
-
-    <View
-        android:id="@+id/view_color_accent"
-        android:layout_width="4dp"
-        android:layout_height="0dp"
-        android:background="@drawable/bg_left_accent_blue"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+    android:background="@drawable/bg_card_class"
+    android:elevation="3dp"
+    android:paddingStart="22dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="16dp">
     <TextView
         android:id="@+id/tv_subject_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
         android:text="Tên môn học"
         android:textColor="#1E3A8A"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/btn_edit"
-        app:layout_constraintStart_toEndOf="@+id/view_color_accent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
@@ -54,8 +46,9 @@
         android:padding="6dp"
         android:src="@drawable/ic_pen"
         app:tint="#FF7043"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_delete"
         app:layout_constraintEnd_toStartOf="@+id/btn_delete"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/btn_delete" />
 
     <ImageView
         android:id="@+id/iv_time"
@@ -63,7 +56,7 @@
         android:layout_height="18dp"
         android:layout_marginTop="12dp"
         android:src="@drawable/ic_whiteclock"
-        app:layout_constraintStart_toStartOf="@+id/tv_subject_name"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_subject_name" />
 
     <TextView
@@ -84,7 +77,7 @@
         android:layout_height="18dp"
         android:layout_marginTop="12dp"
         android:src="@drawable/ic_school"
-        app:layout_constraintStart_toStartOf="@+id/tv_subject_name"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/iv_time" />
 
     <TextView
