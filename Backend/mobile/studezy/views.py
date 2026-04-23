@@ -496,14 +496,16 @@ class AddClassScheduleAPIView(APIView):
         user = request.user
 
         # Tự động lấy hoặc tạo semester mặc định (vì form chưa có chọn semester)
-        semester, _ = Semester.objects.get_or_create(
-            user=user,
-            name="Học kỳ 1 - 2025-2026",
-            defaults={
-                'start_date': timezone.now().date(),
-                'end_date': timezone.now().date() + timedelta(days=180)
-            }
-        )
+        semester_id = request.data.get('semester_id')
+
+        try:
+            # Tìm đúng học kỳ đó trong CSDL
+            semester = Semester.objects.get(id=semester_id, user=user)
+        except Semester.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'message': 'Không tìm thấy thông tin học kỳ để thêm lịch!'
+            }, status=status.HTTP_404_NOT_FOUND)
 
         try:
             # Xử lý thời gian và ngày học
@@ -555,7 +557,13 @@ class AllClassSchedulesAPIView(APIView):
 
     def get(self, request):
         user = request.user
-        schedules = ClassSchedule.objects.filter(user=user).order_by('day_of_week', 'start_time')
+        semester_id = request.query_params.get('semester_id')
+
+        if semester_id:
+            schedules = ClassSchedule.objects.filter(user=user, semester_id=semester_id).order_by('day_of_week',
+                                                                                                  'start_time')
+        else:
+            schedules = ClassSchedule.objects.filter(user=user).order_by('day_of_week', 'start_time')
 
         data = []
         for s in schedules:
