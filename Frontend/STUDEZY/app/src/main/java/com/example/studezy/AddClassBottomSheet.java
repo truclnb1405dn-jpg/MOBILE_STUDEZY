@@ -28,6 +28,7 @@ import retrofit2.Response;
 public class AddClassBottomSheet extends BottomSheetDialogFragment {
 
     private String token;
+    private int semesterId;
     private ScheduleModel scheduleToEdit; // Biến lưu môn học cần sửa
     private OnClassAddedListener listener;
 
@@ -35,10 +36,11 @@ public class AddClassBottomSheet extends BottomSheetDialogFragment {
         void onClassAdded();
     }
 
-    public static AddClassBottomSheet newInstance(String token, @Nullable ScheduleModel schedule, OnClassAddedListener listener) {
+    public static AddClassBottomSheet newInstance(String token, @Nullable ScheduleModel schedule, int semesterId, OnClassAddedListener listener) {
         AddClassBottomSheet fragment = new AddClassBottomSheet();
         fragment.token = token;
-        fragment.scheduleToEdit = schedule; // Gán dữ liệu
+        fragment.scheduleToEdit = schedule;
+        fragment.semesterId = semesterId; // Gán ID học kỳ
         fragment.listener = listener;
         return fragment;
     }
@@ -127,7 +129,7 @@ public class AddClassBottomSheet extends BottomSheetDialogFragment {
                 return;
             }
 
-            AddScheduleRequest request = new AddScheduleRequest(subject, selectedDay[0], timeStr, room, note);
+            AddScheduleRequest request = new AddScheduleRequest(semesterId, subject, selectedDay[0], timeStr, room, note);
 
             if (scheduleToEdit == null) {
                 // CHẾ ĐỘ THÊM MỚI
