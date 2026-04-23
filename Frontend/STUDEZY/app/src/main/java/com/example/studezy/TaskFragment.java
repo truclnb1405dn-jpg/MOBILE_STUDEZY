@@ -138,7 +138,7 @@ public class TaskFragment extends Fragment {
     }
 
     private void setupNavigation(View view, NavController nav) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> nav.navigateUp());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> nav.navigate(R.id.homeFragment));
         view.findViewById(R.id.menu_home).setOnClickListener(v -> nav.navigate(R.id.homeFragment));
         view.findViewById(R.id.menu_schedule).setOnClickListener(v -> nav.navigate(R.id.scheduleFragment));
         view.findViewById(R.id.menu_settings).setOnClickListener(v -> nav.navigate(R.id.settingsFragment));

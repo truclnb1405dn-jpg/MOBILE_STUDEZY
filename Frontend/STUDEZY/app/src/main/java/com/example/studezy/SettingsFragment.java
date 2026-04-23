@@ -90,6 +90,11 @@ public class SettingsFragment extends Fragment {
        Button btnLogout = view.findViewById(R.id.btnLogout);
        ImageButton btnBack = view.findViewById(R.id.btn_back);
 
+       // Sửa đổi ở đây: Gọi thẳng id của HomeFragment
+       btnBack.setOnClickListener(v -> {
+           navController.navigate(R.id.homeFragment);
+       });
+
 
        btnBack.setOnClickListener(v -> {
            if (!navController.popBackStack()) {

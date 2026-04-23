@@ -125,4 +125,9 @@ public interface ApiService {
 
     @POST("api/semester/")
     Call<SemesterModel> createSemester(@Header("Authorization") String token, @Body AddSemesterRequest request);
+    @GET("api/semesters/list/")
+    Call<List<SemesterModel>> getSemesters(@Header("Authorization") String token);
+
+    @PUT("api/semesters/{id}/")
+    Call<SemesterModel> updateSemester(@Header("Authorization") String token, @Path("id") int semesterId, @Body Map<String, String> body);
 }

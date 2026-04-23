@@ -12,4 +12,8 @@ public class SemesterModel {
     public String getName() { return name; }
     public String getStartDate() { return start_date; }
     public String getEndDate() { return end_date; }
+
+    public Object getId() {
+        return id;
+    }
 }

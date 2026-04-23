@@ -702,11 +702,25 @@ class SemesterAPIView(APIView):
         end_date_str = request.data.get('end_date')
 
         if not name or not start_date_str or not end_date_str:
-            return Response({'error': 'Thiếu thông tin'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Thiếu thông tin bắt buộc'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             start_date = datetime.strptime(start_date_str, '%d/%m/%Y').date()
             end_date = datetime.strptime(end_date_str, '%d/%m/%Y').date()
+
+            # 1. Kiểm tra ngày bắt đầu phải trước ngày kết thúc
+            if start_date > end_date:
+                return Response({'error': 'Ngày bắt đầu không thể lớn hơn ngày kết thúc!'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 2. KIỂM TRA TRÙNG LẶP THỜI GIAN
+            is_overlap = Semester.objects.filter(
+                user=request.user,
+                start_date__lte=end_date,
+                end_date__gte=start_date
+            ).exists()
+
+            if is_overlap:
+                return Response({'error': 'Thời gian của học kỳ này bị trùng với một học kỳ khác đã tồn tại!'}, status=status.HTTP_400_BAD_REQUEST)
 
             semester = Semester.objects.create(
                 user=request.user,
@@ -722,5 +736,77 @@ class SemesterAPIView(APIView):
                 'start_date': start_date.strftime('%d/%m/%Y'),
                 'end_date': end_date.strftime('%d/%m/%Y'),
             }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class SemesterListAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Lấy danh sách tất cả học kỳ của user
+        semesters = Semester.objects.filter(user=request.user).order_by('-start_date')
+        data = []
+        for sem in semesters:
+            data.append({
+                'id': sem.id,
+                'name': sem.name,
+                'start_date': sem.start_date.strftime('%d/%m/%Y'),
+                'end_date': sem.end_date.strftime('%d/%m/%Y'),
+            })
+        return Response(data, status=status.HTTP_200_OK)
+
+class SemesterDetailAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            semester = Semester.objects.get(pk=pk, user=request.user)
+            name = request.data.get('name')
+            start_date_str = request.data.get('start_date')
+            end_date_str = request.data.get('end_date')
+
+            if not name or not start_date_str or not end_date_str:
+                return Response({'error': 'Vui lòng điền đầy đủ thông tin bắt buộc'}, status=status.HTTP_400_BAD_REQUEST)
+
+            new_start_date = datetime.strptime(start_date_str, '%d/%m/%Y').date()
+            new_end_date = datetime.strptime(end_date_str, '%d/%m/%Y').date()
+
+            # 1. Kiểm tra ngày hợp lệ
+            if new_start_date > new_end_date:
+                return Response({'error': 'Ngày bắt đầu không thể lớn hơn ngày kết thúc!'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 2. KIỂM TRA TRÙNG LẶP THỜI GIAN (Bỏ qua chính học kỳ đang sửa bằng .exclude)
+            is_overlap = Semester.objects.filter(
+                user=request.user,
+                start_date__lte=new_end_date,
+                end_date__gte=new_start_date
+            ).exclude(pk=pk).exists()
+
+            if is_overlap:
+                return Response({'error': 'Khoảng thời gian chỉnh sửa bị trùng với một học kỳ khác!'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Cập nhật thông tin nếu mọi thứ hợp lệ
+            semester.name = name
+            semester.start_date = new_start_date
+            semester.end_date = new_end_date
+            semester.save()
+
+            delta = semester.end_date - semester.start_date
+            total_weeks = max(1, delta.days // 7)
+
+            return Response({
+                'status': 'success',
+                'message': 'Cập nhật học kỳ thành công',
+                'id': semester.id,
+                'name': semester.name,
+                'start_date': semester.start_date.strftime('%d/%m/%Y'),
+                'end_date': semester.end_date.strftime('%d/%m/%Y'),
+                'total_weeks': total_weeks
+            }, status=status.HTTP_200_OK)
+
+        except Semester.DoesNotExist:
+            return Response({'error': 'Không tìm thấy học kỳ'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

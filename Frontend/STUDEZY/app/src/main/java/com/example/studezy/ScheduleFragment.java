@@ -10,6 +10,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -28,14 +31,19 @@ import com.example.studezy.api.RegisterResponse;
 import com.example.studezy.api.RetrofitClient;
 import com.example.studezy.api.ScheduleModel;
 import com.example.studezy.api.SemesterModel;
+import com.google.android.material.textfield.TextInputEditText;
+
+import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
@@ -47,11 +55,14 @@ public class ScheduleFragment extends Fragment {
     private RecyclerView rvSchedules;
     private String token;
 
-    // Thêm các biến để xử lý lọc
+    // Biến quản lý UI và Lọc
     private ScheduleAdapter adapter;
     private List<ScheduleModel> fullScheduleList = new ArrayList<>();
     private TextView currentSelectedTab;
     private String currentSelectedDay = "2"; // Mặc định khi mở lên là xem Thứ 2
+
+    // BỔ SUNG: Biến lưu trữ học kỳ hiện tại đang hiển thị
+    private SemesterModel currentSemesterInfo = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -65,7 +76,7 @@ public class ScheduleFragment extends Fragment {
         SharedPreferences prefs = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
         token = prefs.getString("USER_TOKEN", "");
 
-        // 1. NÚT THÊM MỚI
+        // 1. NÚT BACK VÀ NÚT THÊM MỚI LỊCH HỌC
         View btnBack = view.findViewById(R.id.btn_back);
         if (btnBack != null) {
             btnBack.setOnClickListener(v ->
@@ -84,7 +95,19 @@ public class ScheduleFragment extends Fragment {
             });
         }
 
-        // 2. KHỞI TẠO RECYCLERVIEW VÀ GẮN SỰ KIỆN CLICK SỬA/XÓA
+        // 2. NÚT CHỈNH SỬA HỌC KỲ
+        View btnEditSemester = view.findViewById(R.id.btn_edit);
+        if (btnEditSemester != null) {
+            btnEditSemester.setOnClickListener(v -> {
+                if (token.isEmpty()) {
+                    Toast.makeText(getContext(), "Bạn chưa đăng nhập", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                showEditSemesterDialog();
+            });
+        }
+
+        // 3. KHỞI TẠO RECYCLERVIEW (DANH SÁCH LỊCH HỌC)
         rvSchedules = view.findViewById(R.id.rv_schedules);
         if (rvSchedules != null) {
             rvSchedules.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -107,7 +130,7 @@ public class ScheduleFragment extends Fragment {
 
         setupTabClickListeners(view);
 
-        // Menu chuyển trang
+        // 4. MENU BOTTOM CHUYỂN TRANG
         view.findViewById(R.id.menu_home).setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.homeFragment));
         view.findViewById(R.id.menu_task).setOnClickListener(v ->
@@ -115,7 +138,7 @@ public class ScheduleFragment extends Fragment {
         view.findViewById(R.id.menu_settings).setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.settingsFragment));
 
-        // Tải dữ liệu
+        // Tải dữ liệu ban đầu
         if (!token.isEmpty()) {
             loadSchedules();
         }
@@ -228,7 +251,6 @@ public class ScheduleFragment extends Fragment {
                 return;
             }
 
-            // Gọi API Lưu học kỳ mới
             AddSemesterRequest requestObj = new AddSemesterRequest(name, startDate, endDate);
             RetrofitClient.getInstance().getApi().createSemester("Token " + token, requestObj)
                     .enqueue(new Callback<SemesterModel>() {
@@ -238,9 +260,18 @@ public class ScheduleFragment extends Fragment {
                                 dialog.dismiss();
                                 Toast.makeText(getContext(), "Đã thêm học kỳ mới", Toast.LENGTH_SHORT).show();
                                 SemesterModel newSem = response.body();
+                                currentSemesterInfo = newSem;
                                 updateSemesterUI(newSem.getName(), newSem.getStartDate(), newSem.getEndDate(), fullScheduleList.size());
                             } else {
-                                Toast.makeText(getContext(), "Lỗi khi tạo học kỳ", Toast.LENGTH_SHORT).show();
+                                // --- CẬP NHẬT ĐỂ ĐỌC LỖI TỪ BACKEND ---
+                                try {
+                                    String errorBody = response.errorBody().string();
+                                    JSONObject jsonObject = new JSONObject(errorBody);
+                                    String errorMessage = jsonObject.getString("error");
+                                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                                } catch (Exception e) {
+                                    Toast.makeText(getContext(), "Lỗi khi tạo học kỳ", Toast.LENGTH_SHORT).show();
+                                }
                             }
                         }
 
@@ -251,7 +282,175 @@ public class ScheduleFragment extends Fragment {
                     });
         });
 
-        dialog.show(); // Dòng này bị thiếu đã được thêm lại
+        dialog.show();
+    }
+
+    // ==========================================
+    // HIỂN THỊ DIALOG CHỈNH SỬA HỌC KỲ
+    // ==========================================
+    private void showEditSemesterDialog() {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        dialog.setContentView(R.layout.dialog_edit_semester);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setDimAmount(0.5f);
+        }
+
+        AutoCompleteTextView autoCompleteSemester = dialog.findViewById(R.id.autoComplete_semester);
+        TextInputEditText edtStartDate = dialog.findViewById(R.id.edt_start_date);
+        TextInputEditText edtEndDate = dialog.findViewById(R.id.edt_end_date);
+        Button btnCancel = dialog.findViewById(R.id.btn_cancel);
+        Button btnSave = dialog.findViewById(R.id.btn_save);
+
+        // --- BƯỚC 1: TỰ ĐỘNG ĐIỀN THÔNG TIN CỦA HỌC KỲ HIỆN TẠI VÀO FORM ---
+        if (currentSemesterInfo != null) {
+            // Tham số 'false' giúp AutoComplete không tự động bật dropdown che màn hình
+            autoCompleteSemester.setText(currentSemesterInfo.getName(), false);
+            edtStartDate.setText(currentSemesterInfo.getStartDate());
+            edtEndDate.setText(currentSemesterInfo.getEndDate());
+
+            // Lưu ID của học kỳ hiện tại vào nút Save
+            Object idObj = currentSemesterInfo.getId();
+            if (idObj != null) {
+                int currentId = idObj instanceof Number ? ((Number) idObj).intValue() : Integer.parseInt(idObj.toString());
+                btnSave.setTag(currentId);
+            }
+        }
+
+        // --- BƯỚC 2: GỌI API LẤY DANH SÁCH HỌC KỲ ĐỂ CHỌN ---
+        RetrofitClient.getInstance().getApi().getSemesters("Token " + token).enqueue(new Callback<List<SemesterModel>>() {
+            @Override
+            public void onResponse(Call<List<SemesterModel>> call, Response<List<SemesterModel>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<SemesterModel> semesterList = response.body();
+                    List<String> semesterNames = new ArrayList<>();
+
+                    // --- BỔ SUNG: THÊM LỰA CHỌN TẠO HỌC KỲ MỚI VÀO ĐẦU DANH SÁCH ---
+                    semesterNames.add("+ Tạo học kỳ mới");
+
+                    for (SemesterModel s : semesterList) {
+                        semesterNames.add(s.getName());
+                    }
+
+                    // Gắn dữ liệu vào Dropdown
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, semesterNames);
+                    autoCompleteSemester.setAdapter(adapter);
+
+                    // Đảm bảo chữ vừa set ở Bước 1 không bị filter mất
+                    if (currentSemesterInfo != null) {
+                        autoCompleteSemester.setText(currentSemesterInfo.getName(), false);
+                    }
+
+                    // Xử lý khi người dùng chọn item trong Dropdown
+                    autoCompleteSemester.setOnItemClickListener((parent, view, position, id) -> {
+                        if (position == 0) {
+                            // CẬP NHẬT: Nếu chọn mục "+ Tạo học kỳ mới" (index 0)
+                            dialog.dismiss(); // Đóng popup chỉnh sửa hiện tại
+                            showAddSemesterDialog(); // Mở popup tạo học kỳ mới
+                        } else {
+                            // CẬP NHẬT: Nếu chọn học kỳ bình thường (position - 1 vì index 0 là nút Tạo mới)
+                            SemesterModel selected = semesterList.get(position - 1);
+                            edtStartDate.setText(selected.getStartDate());
+                            edtEndDate.setText(selected.getEndDate());
+
+                            // Cập nhật lại ID cho nút Save tương ứng với Học kỳ vừa chọn
+                            Object tagObj = selected.getId();
+                            if(tagObj != null) {
+                                int selectedId = tagObj instanceof Number ? ((Number) tagObj).intValue() : Integer.parseInt(tagObj.toString());
+                                btnSave.setTag(selectedId);
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<SemesterModel>> call, Throwable t) {
+                // Xử lý lỗi mạng (nếu cần)
+            }
+        });
+
+        // Thiết lập chọn ngày (Date Picker)
+        edtStartDate.setOnClickListener(v -> showDatePicker(edtStartDate));
+        edtEndDate.setOnClickListener(v -> showDatePicker(edtEndDate));
+
+        // Xử lý nút Huỷ và Lưu
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String name = autoCompleteSemester.getText().toString().trim();
+            String startDate = edtStartDate.getText().toString().trim();
+            String endDate = edtEndDate.getText().toString().trim();
+
+            if (name.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Object tagId = btnSave.getTag();
+            if (tagId == null) {
+                Toast.makeText(getContext(), "Vui lòng chọn học kỳ cần sửa từ danh sách", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            int semesterId = (int) tagId;
+
+            // Chuẩn bị Request Body
+            Map<String, String> requestBody = new HashMap<>();
+            requestBody.put("name", name);
+            requestBody.put("start_date", startDate);
+            requestBody.put("end_date", endDate);
+
+            // Gọi API Cập nhật (PUT)
+            RetrofitClient.getInstance().getApi().updateSemester("Token " + token, semesterId, requestBody).enqueue(new Callback<SemesterModel>() {
+                @Override
+                public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Toast.makeText(getContext(), "Cập nhật học kỳ thành công!", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+
+                        SemesterModel updatedSemester = response.body();
+                        currentSemesterInfo = updatedSemester;
+
+                        updateSemesterUI(updatedSemester.getName(),
+                                updatedSemester.getStartDate(),
+                                updatedSemester.getEndDate(),
+                                fullScheduleList.size());
+
+                    } else {
+                        // --- CẬP NHẬT ĐỂ ĐỌC LỖI TỪ BACKEND ---
+                        try {
+                            String errorBody = response.errorBody().string();
+                            JSONObject jsonObject = new JSONObject(errorBody);
+                            String errorMessage = jsonObject.getString("error");
+                            Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<SemesterModel> call, Throwable t) {
+                    Toast.makeText(getContext(), "Lỗi mạng!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
+    }
+
+    private void showDatePicker(TextInputEditText editText) {
+        Calendar c = Calendar.getInstance();
+        new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
+            String formattedDate = String.format(Locale.getDefault(), "%02d/%02d/%04d", dayOfMonth, month + 1, year);
+            editText.setText(formattedDate);
+        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
     }
 
     private void loadSchedules() {
@@ -274,22 +473,23 @@ public class ScheduleFragment extends Fragment {
                                         public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
                                             if (response.isSuccessful() && response.body() != null) {
                                                 SemesterModel sem = response.body();
-                                                if ("success".equals(sem.getStatus())) {
+                                                if ("success".equals(sem.getStatus()) || sem.getStatus() == null) {
+                                                    currentSemesterInfo = sem; // LƯU VÀO BIẾN GLOBAL
                                                     updateSemesterUI(sem.getName(), sem.getStartDate(), sem.getEndDate(), fullScheduleList.size());
                                                 } else {
-                                                    // Trường hợp status = "not_found" (Chưa có học kỳ)
+                                                    currentSemesterInfo = null;
                                                     updateSemesterUI(null, null, null, 0);
                                                 }
                                             } else {
-                                                // NẾU API TRẢ VỀ LỖI (Ví dụ 404, 500)
+                                                currentSemesterInfo = null;
                                                 Toast.makeText(getContext(), "Lỗi API Semester: " + response.code(), Toast.LENGTH_LONG).show();
-                                                updateSemesterUI(null, null, null, 0); // Vẫn gọi hàm này để ẩn giao diện fix cứng đi
+                                                updateSemesterUI(null, null, null, 0);
                                             }
                                         }
 
                                         @Override
                                         public void onFailure(Call<SemesterModel> call, Throwable t) {
-                                            // NẾU LỖI MẠNG HOẶC SAI ĐỊNH DẠNG JSON
+                                            currentSemesterInfo = null;
                                             Toast.makeText(getContext(), "Lỗi kết nối Semester: " + t.getMessage(), Toast.LENGTH_LONG).show();
                                             updateSemesterUI(null, null, null, 0);
                                         }
