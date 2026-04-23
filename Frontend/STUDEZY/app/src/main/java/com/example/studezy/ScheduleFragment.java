@@ -54,7 +54,7 @@ public class ScheduleFragment extends Fragment {
 
     private RecyclerView rvSchedules;
     private String token;
-
+    private int currentSemesterId = 1;
     // Biến quản lý UI và Lọc
     private ScheduleAdapter adapter;
     private List<ScheduleModel> fullScheduleList = new ArrayList<>();
@@ -90,7 +90,7 @@ public class ScheduleFragment extends Fragment {
                     Toast.makeText(getContext(), "Bạn chưa đăng nhập", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                AddClassBottomSheet bottomSheet = AddClassBottomSheet.newInstance(token, null, this::loadSchedules);
+                AddClassBottomSheet bottomSheet = AddClassBottomSheet.newInstance(token, null, currentSemesterId, this::loadSchedules);
                 bottomSheet.show(getParentFragmentManager(), "AddClassBottomSheet");
             });
         }
@@ -115,7 +115,7 @@ public class ScheduleFragment extends Fragment {
             adapter = new ScheduleAdapter(new ScheduleAdapter.OnItemClickListener() {
                 @Override
                 public void onEditClick(ScheduleModel schedule) {
-                    AddClassBottomSheet bottomSheet = AddClassBottomSheet.newInstance(token, schedule, () -> loadSchedules());
+                    AddClassBottomSheet bottomSheet = AddClassBottomSheet.newInstance(token, schedule, currentSemesterId, () -> loadSchedules());
                     bottomSheet.show(getParentFragmentManager(), "EditClassBottomSheet");
                 }
 
@@ -457,7 +457,7 @@ public class ScheduleFragment extends Fragment {
         if (rvSchedules == null) return;
 
         // BƯỚC 1: Gọi API lấy danh sách Môn học
-        RetrofitClient.getInstance().getApi().getAllClassSchedules("Token " + token)
+        RetrofitClient.getInstance().getApi().getAllClassSchedules("Token " + token, currentSemesterId)
                 .enqueue(new Callback<List<ScheduleModel>>() {
                     @Override
                     public void onResponse(Call<List<ScheduleModel>> call, Response<List<ScheduleModel>> response) {
