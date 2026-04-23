@@ -91,7 +91,10 @@ public interface ApiService {
     );
 
     @GET("api/class-schedules/")
-    Call<java.util.List<ScheduleModel>> getAllClassSchedules(@Header("Authorization") String token);
+    Call<List<ScheduleModel>> getAllClassSchedules(
+            @Header("Authorization") String token,
+            @Query("semester_id") int semesterId
+    );
 
     @DELETE("api/class-schedules/{id}/")
     Call<RegisterResponse> deleteClassSchedule(
