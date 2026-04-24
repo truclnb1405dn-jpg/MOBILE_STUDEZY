@@ -73,8 +73,11 @@ public class HomeFragment extends Fragment {
         rvClasses.setLayoutManager(new LinearLayoutManager(getContext()));
         rvDeadlines.setLayoutManager(new LinearLayoutManager(getContext()));
 
+
+
         // 2. Lấy Full Name và Token đã lưu lúc Đăng nhập
         SharedPreferences prefs = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
+        prefs.edit().putLong("LAST_ACTIVITY_TIME", System.currentTimeMillis()).apply();
         String fullName = prefs.getString("USER_FULL_NAME", "Sinh Viên");
         userToken = prefs.getString("USER_TOKEN", ""); // Gán vào biến class
 
@@ -176,11 +179,14 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    // Hàm gọi dữ liệu khi click vào một ngày cụ thể trên Lịch
-    // Hàm gọi dữ liệu khi click vào một ngày cụ thể trên Lịch
     private void fetchDataForSelectedDate(String dateStr) {
         if (userToken == null || userToken.isEmpty()) return;
         String authHeader = "Token " + userToken;
+
+        // BỔ SUNG: Lấy ID học kỳ đã lưu trong SharedPreferences (mặc định là -1 nếu chưa có)
+        SharedPreferences prefs = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
+        int savedSemesterId = prefs.getInt("SELECTED_SEMESTER_ID", -1);
+        Integer apiSemesterId = (savedSemesterId != -1) ? savedSemesterId : null;
 
         // --- PHẦN LỊCH HỌC: Chỉ hiển thị nếu có học kỳ ---
         RetrofitClient.getInstance().getApi().getCurrentSemester(authHeader).enqueue(new Callback<SemesterModel>() {
@@ -188,7 +194,8 @@ public class HomeFragment extends Fragment {
             public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
                 if (response.isSuccessful() && response.body() != null && "success".equals(response.body().getStatus())) {
 
-                    RetrofitClient.getInstance().getApi().getClassesByDate(authHeader, dateStr).enqueue(new Callback<List<ClassModel>>() {
+                    // CẬP NHẬT: Truyền thêm apiSemesterId vào API getClassesByDate
+                    RetrofitClient.getInstance().getApi().getClassesByDate(authHeader, dateStr, apiSemesterId).enqueue(new Callback<List<ClassModel>>() {
                         @Override
                         public void onResponse(Call<List<ClassModel>> call, Response<List<ClassModel>> response) {
                             if (response.isSuccessful() && response.body() != null) {
@@ -250,11 +257,19 @@ public class HomeFragment extends Fragment {
     // --- CÁC HÀM GỌI API GIỮ NGUYÊN NHƯ CỦA BẠN ---
     private void fetchHomeSummary(String token) {
         String authHeader = "Token " + token;
-        RetrofitClient.getInstance().getApi().getHomeSummary(authHeader).enqueue(new Callback<HomeSummaryResponse>() {
+
+        // Lấy ID học kỳ đang được lưu trong máy
+        SharedPreferences prefs = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
+        int savedSemesterId = prefs.getInt("SELECTED_SEMESTER_ID", -1);
+        Integer apiSemesterId = (savedSemesterId != -1) ? savedSemesterId : null;
+
+        // Truyền apiSemesterId vào hàm
+        RetrofitClient.getInstance().getApi().getHomeSummary(authHeader, apiSemesterId).enqueue(new Callback<HomeSummaryResponse>() {
             public void onResponse(Call<HomeSummaryResponse> call, Response<HomeSummaryResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     int classes = response.body().getClassesToday();
                     int deadlines = response.body().getDeadlinesToday();
+
                     String summaryText = "Hôm nay bạn có " + classes + " tiết học và " + deadlines + " deadline cần xử lý";
                     tvSummary.setText(summaryText);
                 }
@@ -269,14 +284,17 @@ public class HomeFragment extends Fragment {
     private void fetchClassesToday(String token) {
         String authHeader = "Token " + token;
 
-        // Kiểm tra xem có học kỳ nào không trước khi tải lịch
+        // Lấy ID học kỳ đang được lưu, mặc định là -1 nếu chưa có
+        SharedPreferences prefs = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
+        int savedSemesterId = prefs.getInt("SELECTED_SEMESTER_ID", -1);
+        Integer apiSemesterId = (savedSemesterId != -1) ? savedSemesterId : null;
+
         RetrofitClient.getInstance().getApi().getCurrentSemester(authHeader).enqueue(new Callback<SemesterModel>() {
             @Override
             public void onResponse(Call<SemesterModel> call, Response<SemesterModel> response) {
-                // Chỉ cần Backend trả về success (nghĩa là có học kỳ) thì tải lịch học
                 if (response.isSuccessful() && response.body() != null && "success".equals(response.body().getStatus())) {
-
-                    RetrofitClient.getInstance().getApi().getClassesToday(authHeader).enqueue(new Callback<List<ClassModel>>() {
+                    // Truyền apiSemesterId vào hàm
+                    RetrofitClient.getInstance().getApi().getClassesToday(authHeader, apiSemesterId).enqueue(new Callback<List<ClassModel>>() {
                         @Override
                         public void onResponse(Call<List<ClassModel>> call, Response<List<ClassModel>> response) {
                             if (response.isSuccessful() && response.body() != null) {
@@ -287,13 +305,10 @@ public class HomeFragment extends Fragment {
                         @Override
                         public void onFailure(Call<List<ClassModel>> call, Throwable t) { }
                     });
-
                 } else {
-                    // Nếu không có học kỳ, xóa trắng danh sách lịch học
                     rvClasses.setAdapter(new ClassHomeAdapter(new ArrayList<>(), null));
                 }
             }
-
             @Override
             public void onFailure(Call<SemesterModel> call, Throwable t) {
                 rvClasses.setAdapter(new ClassHomeAdapter(new ArrayList<>(), null));

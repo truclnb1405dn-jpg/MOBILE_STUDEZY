@@ -76,6 +76,7 @@ public class ScheduleFragment extends Fragment {
         SharedPreferences prefs = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
         token = prefs.getString("USER_TOKEN", "");
 
+        currentSemesterId = prefs.getInt("SELECTED_SEMESTER_ID", 1);
         // 1. NÚT BACK VÀ NÚT THÊM MỚI LỊCH HỌC
         View btnBack = view.findViewById(R.id.btn_back);
         if (btnBack != null) {
@@ -364,6 +365,8 @@ public class ScheduleFragment extends Fragment {
                                 currentSemesterId = selectedId;
                                 currentSemesterInfo = selected;
 
+                                requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE)
+                                        .edit().putInt("SELECTED_SEMESTER_ID", currentSemesterId).apply();
 
                                 fetchClassSchedules();
 
@@ -480,9 +483,14 @@ public class ScheduleFragment extends Fragment {
                                 }
                             }
 
+                            // Nếu ID đã lưu không tồn tại trong danh sách mới, lấy cái đầu tiên
                             if (!found) {
                                 currentSemesterInfo = list.get(0);
                                 currentSemesterId = ((Number) currentSemesterInfo.getId()).intValue();
+
+                                // LƯU LẠI ID MỚI:
+                                requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE)
+                                        .edit().putInt("SELECTED_SEMESTER_ID", currentSemesterId).apply();
                             }
 
                             updateSemesterUI(currentSemesterInfo.getName(), currentSemesterInfo.getStartDate(),
@@ -490,7 +498,6 @@ public class ScheduleFragment extends Fragment {
 
                             fetchClassSchedules();
                         } else {
-
                             updateSemesterUI(null, null, null, 0);
                         }
                     }

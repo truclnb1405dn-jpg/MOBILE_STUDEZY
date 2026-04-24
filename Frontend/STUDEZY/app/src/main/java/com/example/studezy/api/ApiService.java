@@ -24,10 +24,16 @@ public interface ApiService {
     Call<RegisterResponse> registerUser(@Body RegisterRequest registerRequest);
 
     @GET("api/home-summary/")
-    Call<HomeSummaryResponse> getHomeSummary(@Header("Authorization") String token);
+    Call<HomeSummaryResponse> getHomeSummary(
+            @Header("Authorization") String token,
+            @Query("semester_id") Integer semesterId // Thêm dòng này để gửi ID lên server
+    );
 
     @GET("api/classes-today/")
-    Call<List<ClassModel>> getClassesToday(@Header("Authorization") String token);
+    Call<List<ClassModel>> getClassesToday(
+            @Header("Authorization") String token,
+            @Query("semester_id") Integer semesterId  // <-- Thêm dòng này
+    );
 
     @GET("api/top-deadlines/")
     Call<List<DeadlineModel>> getTopDeadlines(@Header("Authorization") String token);
@@ -35,7 +41,8 @@ public interface ApiService {
     @GET("api/classes-by-date/")
     Call<List<ClassModel>> getClassesByDate(
             @Header("Authorization") String token,
-            @Query("date") String date // Tham số date truyền lên server
+            @Query("date") String date,
+            @Query("semester_id") Integer semesterId  // <-- Thêm dòng này
     );
 
     @GET("api/deadlines-by-date/")

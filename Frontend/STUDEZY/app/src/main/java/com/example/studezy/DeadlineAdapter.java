@@ -39,62 +39,70 @@ public class DeadlineAdapter extends RecyclerView.Adapter<DeadlineAdapter.Deadli
     public void onBindViewHolder(@NonNull DeadlineViewHolder holder, int position) {
         DeadlineModel item = deadlineList.get(position);
 
-        // 1. Reset toàn bộ UI về trạng thái mặc định
+        // 1. Reset toàn bộ UI về trạng thái mặc định để tránh lỗi tái sử dụng View
         holder.itemView.setAlpha(1.0f);
         holder.cbDeadline.setVisibility(View.VISIBLE);
         holder.tvTitle.setPaintFlags(holder.tvTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         holder.tvTitle.setTextColor(Color.parseColor("#1E3A8A"));
 
-        // Luôn set trạng thái tick dựa vào dữ liệu từ database trước
+        // Cực kỳ quan trọng: Xóa bỏ mọi bộ lọc màu cũ để icon hiển thị đúng màu gốc
+        holder.ivCalendar.clearColorFilter();
+
+        // Set trạng thái tick
         holder.cbDeadline.setChecked(item.isCompleted());
 
         // Biến kiểm tra quá hạn
         boolean isOverdue = item.getRemainingText() != null && item.getRemainingText().equals("Đã quá hạn");
 
-        // 2. LOGIC ƯU TIÊN HIỂN THỊ MỚI
+        // 2. LOGIC ƯU TIÊN HIỂN THỊ
         if (item.isCompleted()) {
-            // ƯU TIÊN 1: ĐÃ HOÀN THÀNH (Bất kể hạn nộp là ngày nào trong quá khứ hay tương lai)
+            // ĐÃ HOÀN THÀNH
             holder.tvTitle.setPaintFlags(holder.tvTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             holder.tvTitle.setTextColor(Color.parseColor("#9E9E9E"));
             holder.tvTitle.setText(item.getTitle());
 
             holder.tvTime.setText("Đã hoàn thành");
             holder.tvTime.setTextColor(Color.parseColor("#9E9E9E"));
-            holder.ivCalendar.setImageResource(R.drawable.ic_checkbox_tick);
-
-            holder.cbDeadline.setButtonTintList(ColorStateList.valueOf(Color.parseColor("#10B981")));
+            holder.ivCalendar.setImageResource(R.drawable.ic_checkbox_tick); // Dùng icon tick (nếu có) hoặc giữ ic_calendar
 
         } else if (isOverdue) {
-            // ƯU TIÊN 2: CHƯA HOÀN THÀNH VÀ ĐÃ QUÁ HẠN
-            holder.itemView.setAlpha(0.5f); // Làm mờ
-            holder.cbDeadline.setVisibility(View.INVISIBLE); // Ẩn nút tick
+            // QUÁ HẠN
+            holder.itemView.setAlpha(0.5f);
+            holder.cbDeadline.setVisibility(View.INVISIBLE);
 
             holder.tvTitle.setText(item.getTitle());
             holder.tvTime.setText("Đã quá hạn");
             holder.tvTime.setTextColor(Color.parseColor("#FF4D3D"));
-            holder.ivCalendar.setImageResource(R.drawable.ic_calendar);
+
+            // Hiện icon đồng hồ đỏ
+            holder.ivCalendar.setImageResource(R.drawable.ic_redclock);
 
         } else {
-            // ƯU TIÊN 3: CÁC DEADLINE BÌNH THƯỜNG (Chưa hoàn thành, chưa tới hạn)
+            // CÁC DEADLINE BÌNH THƯỜNG
             holder.tvTitle.setText(item.getTitle());
+            // Reset Checkbox về XÁM
+            holder.cbDeadline.setButtonTintList(ColorStateList.valueOf(Color.parseColor("#C7C7C7")));
 
             if (item.isUrgent()) {
-                holder.tvTime.setText("⏰  " + item.getRemainingText());
+                // Hạn <= 1 ngày: Chữ đỏ, icon đồng hồ đỏ
+                holder.tvTime.setText(item.getRemainingText());
                 holder.tvTime.setTextColor(Color.parseColor("#FF4D3D"));
+                holder.ivCalendar.setImageResource(R.drawable.ic_redclock);
             } else {
+                // Hạn > 1 ngày: Chữ xám, icon lịch xám
                 holder.tvTime.setText(item.getRemainingText());
                 holder.tvTime.setTextColor(Color.parseColor("#8B8B8B"));
+                holder.ivCalendar.setImageResource(R.drawable.ic_calendar);
             }
-
-            holder.ivCalendar.setImageResource(R.drawable.ic_calendar);
-            holder.cbDeadline.setButtonTintList(ColorStateList.valueOf(Color.parseColor("#C7C7C7")));
         }
 
-        // 3. Xử lý sự kiện khi người dùng click vào nút Tick
+        // 3. Xử lý sự kiện khi click CheckBox
         holder.cbDeadline.setOnClickListener(v -> {
             boolean isNowChecked = holder.cbDeadline.isChecked();
             item.setCompleted(isNowChecked);
-            notifyItemChanged(position); // Refresh lại giao diện ngay lập tức
+
+            // Cập nhật lại màu sắc giao diện ngay lập tức
+            notifyItemChanged(position);
 
             if (listener != null) {
                 listener.onToggled(item.getId(), isNowChecked);
@@ -107,7 +115,6 @@ public class DeadlineAdapter extends RecyclerView.Adapter<DeadlineAdapter.Deadli
         return deadlineList != null ? deadlineList.size() : 0;
     }
 
-    // Đã thêm cbDeadline và ánh xạ findViewById
     static class DeadlineViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvTime;
         ImageView ivCalendar;

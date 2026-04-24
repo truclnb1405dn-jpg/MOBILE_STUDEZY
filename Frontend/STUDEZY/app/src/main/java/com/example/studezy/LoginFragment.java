@@ -3,12 +3,15 @@ package com.example.studezy;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,7 +31,11 @@ public class LoginFragment extends Fragment {
 
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
-    private CheckBox cbRemember; // Bổ sung biến cho CheckBox
+    private CheckBox cbRemember;
+
+    // Khai báo thêm biến cho icon con mắt
+    private ImageView ivTogglePassword;
+    private boolean isPasswordVisible = false;
 
     public LoginFragment() {
         // Required empty public constructor
@@ -47,9 +54,28 @@ public class LoginFragment extends Fragment {
         edtUsername = view.findViewById(R.id.et_username);
         edtPassword = view.findViewById(R.id.et_password);
         btnLogin = view.findViewById(R.id.btn_login);
-        cbRemember = view.findViewById(R.id.cb_remember); // Ánh xạ CheckBox
+        cbRemember = view.findViewById(R.id.cb_remember);
+        ivTogglePassword = view.findViewById(R.id.iv_toggle_password); // Ánh xạ icon
 
-        // 2. Kiểm tra xem trước đó có lưu tên đăng nhập không
+        // 2. Logic ẩn/hiện mật khẩu
+        ivTogglePassword.setOnClickListener(v -> {
+            if (isPasswordVisible) {
+                // Đang hiện -> Chuyển sang ẨN (hiện dấu sao)
+                edtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                ivTogglePassword.setImageResource(R.drawable.ic_mat); // Đổi icon thành mắt đóng
+                isPasswordVisible = false;
+            } else {
+                // Đang ẩn -> Chuyển sang HIỆN (thấy text)
+                edtPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                ivTogglePassword.setImageResource(R.drawable.ic_momk); // Đổi icon thành mắt mở
+                isPasswordVisible = true;
+            }
+
+            // Đưa con trỏ (cursor) về cuối đoạn text để tránh bị nhảy chuột lên đầu
+            edtPassword.setSelection(edtPassword.getText().length());
+        });
+
+        // 3. Kiểm tra xem trước đó có lưu tên đăng nhập không
         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
         String savedUsername = sharedPreferences.getString("SAVED_USERNAME", "");
 
@@ -62,8 +88,13 @@ public class LoginFragment extends Fragment {
             edtPassword.requestFocus();
         }
 
-        // 3. Bắt sự kiện click nút Đăng nhập
+        // 4. Bắt sự kiện click nút Đăng nhập
         btnLogin.setOnClickListener(v -> performLogin(view));
+        // 5. Xử lý chuyển sang trang Đăng ký
+        TextView tvRegisterNow = view.findViewById(R.id.tv_register_now);
+        tvRegisterNow.setOnClickListener(v -> {
+            Navigation.findNavController(view).navigate(R.id.registerFragment);
+        });
     }
 
     private void performLogin(View view) {
@@ -91,17 +122,22 @@ public class LoginFragment extends Fragment {
 
                     editor.putString("USER_TOKEN", token);
                     editor.putString("USER_FULL_NAME", fullName);
+                    // Tìm đoạn lưu Token trong performLogin và thêm dòng lưu thời gian
+                    editor.putString("USER_TOKEN", token);
+                    editor.putString("USER_FULL_NAME", fullName);
+
+                    editor.putLong("LAST_ACTIVITY_TIME", System.currentTimeMillis());
+
+                    editor.apply();
 
                     // --- LOGIC GHI NHỚ ĐĂNG NHẬP ---
                     if (cbRemember.isChecked()) {
-                        // Nếu user tick chọn -> Lưu lại tên đăng nhập
                         editor.putString("SAVED_USERNAME", username);
                     } else {
-                        // Nếu user KHÔNG tick (hoặc bỏ tick) -> Xóa tên đăng nhập đã lưu đi
                         editor.remove("SAVED_USERNAME");
                     }
 
-                    editor.apply(); // Áp dụng thay đổi
+                    editor.apply();
 
                     Toast.makeText(getContext(), "Xin chào " + fullName, Toast.LENGTH_SHORT).show();
 

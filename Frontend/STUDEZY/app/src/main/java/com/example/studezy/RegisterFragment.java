@@ -1,12 +1,15 @@
 package com.example.studezy;
 
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,6 +31,11 @@ public class RegisterFragment extends Fragment {
     private CheckBox cbTerms;
     private Button btnRegisterSubmit;
 
+    // Biến cho ẩn/hiện mật khẩu
+    private ImageView ivTogglePass, ivToggleConfirmPass;
+    private boolean isPassVisible = false;
+    private boolean isConfirmPassVisible = false;
+
     public RegisterFragment() {}
 
     @Override
@@ -39,18 +47,61 @@ public class RegisterFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 1. Ánh xạ ID (Nhớ kiểm tra lại cho khớp với thiết kế XML của bạn)
+        // 1. Ánh xạ ID
         edtRegFullName = view.findViewById(R.id.et_fullname);
         edtRegEmail = view.findViewById(R.id.et_email);
         edtRegUsername = view.findViewById(R.id.et_username_reg);
         edtRegPassword = view.findViewById(R.id.et_password_reg);
-        edtRegConfirmPassword = view.findViewById(R.id.et_confirm_password); // Ô mới
-        cbTerms = view.findViewById(R.id.cb_terms);                             // Ô mới
+        edtRegConfirmPassword = view.findViewById(R.id.et_confirm_password);
+        cbTerms = view.findViewById(R.id.cb_terms);
+        btnRegisterSubmit = view.findViewById(R.id.btn_do_register);
+        cbTerms = view.findViewById(R.id.cb_terms);
         btnRegisterSubmit = view.findViewById(R.id.btn_do_register);
 
-        // Nút lùi về trang trước (Nút mũi tên trên cùng bên trái)
+        ivTogglePass = view.findViewById(R.id.iv_toggle_pass_reg);
+        ivToggleConfirmPass = view.findViewById(R.id.iv_toggle_confirm_pass_reg);
+
+        // Nút lùi về trang trước
         view.findViewById(R.id.btn_back_reg).setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
 
+        TextView tvTerms = view.findViewById(R.id.tv_terms);
+        String termsHtml = "Tôi đồng ý với <font color='#376BE5'><u>Điều khoản dịch vụ</u></font> và <font color='#376BE5'><u>Chính sách bảo mật</u></font>";
+        tvTerms.setText(android.text.Html.fromHtml(termsHtml, android.text.Html.FROM_HTML_MODE_COMPACT));
+        // Chuyển sang trang đăng nhập nếu đã có tài khoản
+        TextView tvBackToLogin = view.findViewById(R.id.tv_back_to_login);
+        tvBackToLogin.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
+
+        // 2. Logic ẩn/hiện Mật khẩu
+        ivTogglePass.setOnClickListener(v -> {
+            if (isPassVisible) {
+                // Đang hiện -> Chuyển sang ẨN (hiện dấu sao)
+                edtRegPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                ivTogglePass.setImageResource(R.drawable.ic_mat);
+                isPassVisible = false;
+            } else {
+                // Đang ẩn -> Chuyển sang HIỆN (thấy text)
+                edtRegPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                ivTogglePass.setImageResource(R.drawable.ic_momk);
+                isPassVisible = true;
+            }
+            edtRegPassword.setSelection(edtRegPassword.getText().length());
+        });
+
+        // 3. Logic ẩn/hiện Xác nhận mật khẩu
+        ivToggleConfirmPass.setOnClickListener(v -> {
+            if (isConfirmPassVisible) {
+                edtRegConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                ivToggleConfirmPass.setImageResource(R.drawable.ic_mat);
+                isConfirmPassVisible = false;
+            } else {
+                edtRegConfirmPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                ivToggleConfirmPass.setImageResource(R.drawable.ic_momk);
+                isConfirmPassVisible = true;
+            }
+            edtRegConfirmPassword.setSelection(edtRegConfirmPassword.getText().length());
+        });
+
+        // Submit form
         btnRegisterSubmit.setOnClickListener(v -> performRegistration(view));
     }
 
@@ -61,31 +112,25 @@ public class RegisterFragment extends Fragment {
         String password = edtRegPassword.getText().toString().trim();
         String confirmPassword = edtRegConfirmPassword.getText().toString().trim();
 
-        // 1. Kiểm tra rỗng
         if (username.isEmpty() || password.isEmpty() || fullName.isEmpty() || confirmPassword.isEmpty()) {
             Toast.makeText(getContext(), "Vui lòng nhập đủ các thông tin bắt buộc", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 2. Kiểm tra xác nhận mật khẩu khớp nhau
         if (!password.equals(confirmPassword)) {
             Toast.makeText(getContext(), "Mật khẩu xác nhận không khớp!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 3. Kiểm tra độ dài mật khẩu (tối thiểu 8 ký tự như trên UI)
         if (password.length() < 8) {
             Toast.makeText(getContext(), "Mật khẩu phải có tối thiểu 8 ký tự", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 4. Kiểm tra xem đã tick đồng ý điều khoản chưa
         if (!cbTerms.isChecked()) {
             Toast.makeText(getContext(), "Bạn cần đồng ý với Điều khoản dịch vụ", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        // Nếu qua hết các ải trên, đóng gói dữ liệu và gửi đi
 
         RegisterRequest request = new RegisterRequest(username, password, fullName, email);
 
@@ -94,7 +139,6 @@ public class RegisterFragment extends Fragment {
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                    // Thành công thì lùi về màn hình Đăng nhập
                     Navigation.findNavController(view).popBackStack();
                 } else {
                     Toast.makeText(getContext(), "Tên đăng nhập đã tồn tại", Toast.LENGTH_SHORT).show();

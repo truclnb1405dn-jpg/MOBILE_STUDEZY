@@ -120,11 +120,20 @@
         android:hint="***********"
         android:inputType="textPassword"
         android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:textSize="14sp"
+        android:paddingEnd="48dp" android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="@+id/et_username"
         app:layout_constraintStart_toStartOf="@+id/et_username"
         app:layout_constraintTop_toBottomOf="@+id/tv_password_label" />
+
+    <ImageView
+        android:id="@+id/iv_toggle_password"
+        android:layout_width="48dp"
+        android:layout_height="54dp"
+        android:padding="14dp"
+        android:src="@drawable/ic_mat"
+        app:layout_constraintBottom_toBottomOf="@+id/et_password"
+        app:layout_constraintEnd_toEndOf="@+id/et_password"
+        app:layout_constraintTop_toTopOf="@+id/et_password" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_login"

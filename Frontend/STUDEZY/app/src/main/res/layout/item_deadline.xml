@@ -22,9 +22,10 @@
 
         <CheckBox
             android:id="@+id/cb_deadline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:buttonTint="#C7C7C7" />
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:button="@null"
+            android:background="@drawable/bg_checkbox_circle" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -54,14 +55,13 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:layout_marginEnd="6dp"
-                    android:src="@drawable/ic_calendar"
-                    app:tint="#8B8B8B" />
+                    android:src="@drawable/ic_calendar" />
 
                 <TextView
                     android:id="@+id/tv_deadline_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    tools:text="⏰  Còn 3 giờ"
+                    tools:text="Còn 3 giờ"
                     android:textColor="#FF4D3D"
                     android:textSize="14sp" />
             </LinearLayout>

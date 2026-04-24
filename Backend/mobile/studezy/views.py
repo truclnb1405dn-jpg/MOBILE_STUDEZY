@@ -66,11 +66,33 @@ class HomeSummaryAPIView(APIView):
     def get(self, request):
         user = request.user
         now = timezone.localtime(timezone.now())
-
         django_weekday = now.weekday() + 2
-        classes_today = ClassSchedule.objects.filter(user=user, day_of_week=django_weekday).count()
 
-        deadlines_today = Deadline.objects.filter(user=user, due_date__date=now.date(), is_completed=False).count()
+        # 1. Nhận ID học kỳ từ Android
+        semester_id = request.query_params.get('semester_id')
+
+        # Tìm học kỳ tương ứng
+        if semester_id:
+            semester = Semester.objects.filter(id=semester_id, user=user).first()
+        else:
+            semester = Semester.objects.filter(user=user).order_by('-id').first()
+
+        # 2. CHỈ ĐẾM TIẾT HỌC THUỘC HỌC KỲ NÀY
+        if semester:
+            classes_today = ClassSchedule.objects.filter(
+                user=user,
+                semester=semester,
+                day_of_week=django_weekday
+            ).count()
+        else:
+            classes_today = 0
+
+        # 3. Deadline giữ nguyên (vì bạn xác nhận đã đúng)
+        deadlines_today = Deadline.objects.filter(
+            user=user,
+            due_date__date=now.date(),
+            is_completed=False
+        ).count()
 
         return Response({
             'classes_today': classes_today,
@@ -87,10 +109,14 @@ class ClassesTodayAPIView(APIView):
         now = timezone.localtime(timezone.now())
         django_weekday = now.weekday() + 2
 
-        # BƯỚC 1: Tìm học kỳ hiện tại/mới nhất của user
-        semester = Semester.objects.filter(user=user).order_by('-id').first()
+        semester_id = request.query_params.get('semester_id')
 
-        # Nếu chưa có học kỳ thì trả về danh sách rỗng ngay lập tức
+        # BƯỚC 1: Tìm học kỳ
+        if semester_id:
+            semester = Semester.objects.filter(id=semester_id, user=user).first()
+        else:
+            semester = Semester.objects.filter(user=user).order_by('-id').first()
+
         if not semester:
             return Response([])
 
