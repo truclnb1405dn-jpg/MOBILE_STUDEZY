@@ -139,13 +139,13 @@ public class RegisterFragment extends Fragment {
         }
 
         RegisterRequest request = new RegisterRequest(username, password, fullName, email);
-
+//
         RetrofitClient.getInstance().getApi().registerUser(request).enqueue(new Callback<RegisterResponse>() {
             @Override
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
-
+//Chuyển sang trang đăng nhập sau khi đăng ký thành công
                     Navigation.findNavController(view).navigate(R.id.loginFragment, null,
                             new NavOptions.Builder().setPopUpTo(R.id.registerFragment, true).build());
                 } else {
