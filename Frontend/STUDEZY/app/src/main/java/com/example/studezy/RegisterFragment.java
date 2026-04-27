@@ -146,14 +146,12 @@ public class RegisterFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
 
-                    // SỬA TẠI ĐÂY: Chuyển sang trang Đăng nhập sau khi đăng ký thành công
                     Navigation.findNavController(view).navigate(R.id.loginFragment, null,
                             new NavOptions.Builder().setPopUpTo(R.id.registerFragment, true).build());
                 } else {
                     Toast.makeText(getContext(), "Tên đăng nhập đã tồn tại", Toast.LENGTH_SHORT).show();
                 }
             }
-            // ... (các phần khác giữ nguyên)
 
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
