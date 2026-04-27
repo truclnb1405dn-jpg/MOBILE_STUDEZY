@@ -3,6 +3,7 @@ package com.example.studezy;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,34 +29,44 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        // --- BẮT ĐẦU LOGIC ĐIỀU HƯỚNG THEO LƯỢT MỞ APP ---
-
-        // 1. Kiểm tra biến APP_FIRST_OPEN trong bộ nhớ (mặc định là true nếu chưa từng lưu)
+        // --- BẮT ĐẦU LOGIC ĐIỀU HƯỚNG TẬP TRUNG ---
         SharedPreferences prefs = getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
+
+        // 1. Lấy tất cả thông tin cần thiết
         boolean isFirstOpen = prefs.getBoolean("APP_FIRST_OPEN", true);
+        String token = prefs.getString("USER_TOKEN", "");
+        long lastActivity = prefs.getLong("LAST_ACTIVITY_TIME", 0);
+        long currentTime = System.currentTimeMillis();
+        long threeDaysInMillis = 3L * 24 * 60 * 60 * 1000;
 
-        // 2. Lấy NavController để điều khiển luồng màn hình
-        // LƯU Ý: ID "nav_host_fragment" bên dưới phải khớp với ID trong file activity_main.xml của bạn.
+        // 2. Chuẩn bị Navigation
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-
         if (navHostFragment != null) {
             NavController navController = navHostFragment.getNavController();
             NavInflater navInflater = navController.getNavInflater();
             NavGraph navGraph = navInflater.inflate(R.navigation.nav_graph);
 
-            // 3. Xử lý logic chuyển màn hình
+            // 3. KIỂM TRA VÀ CHỌN TRANG BẮT ĐẦU (Start Destination)
             if (isFirstOpen) {
-                // Nếu mở app lần đầu -> Đặt trang bắt đầu là Welcome
+                // Lần đầu mở app -> Vào trang Welcome
                 navGraph.setStartDestination(R.id.welcomeFragment);
-
-                // Đánh dấu là đã mở app rồi để lần sau không vào đây nữa
+                // Đánh dấu là đã mở app
                 prefs.edit().putBoolean("APP_FIRST_OPEN", false).apply();
+
+            } else if (!token.isEmpty() && (currentTime - lastActivity <= threeDaysInMillis)) {
+                // Đã đăng nhập và chưa quá 3 ngày -> Vào thẳng trang Home
+                navGraph.setStartDestination(R.id.homeFragment);
+
             } else {
-                // Nếu đã mở app từ lần thứ 2 trở đi -> Vào thẳng màn Đăng nhập
+                // Hết hạn 3 ngày HOẶC chưa đăng nhập -> Vào trang Login
+                if (!token.isEmpty() && (currentTime - lastActivity > threeDaysInMillis)) {
+                    prefs.edit().remove("USER_TOKEN").remove("USER_FULL_NAME").remove("LAST_ACTIVITY_TIME").apply();
+                    Toast.makeText(this, "Phiên đăng nhập đã hết hạn", Toast.LENGTH_SHORT).show();
+                }
                 navGraph.setStartDestination(R.id.loginFragment);
             }
 
-            // Áp dụng biểu đồ điều hướng (graph) mới này cho NavController
+            // Áp dụng graph đã chọn
             navController.setGraph(navGraph);
         }
         // --- KẾT THÚC LOGIC ĐIỀU HƯỚNG ---
