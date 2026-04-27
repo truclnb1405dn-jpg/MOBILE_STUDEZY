@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.example.studezy.api.RegisterRequest;
@@ -69,7 +70,12 @@ public class RegisterFragment extends Fragment {
         tvTerms.setText(android.text.Html.fromHtml(termsHtml, android.text.Html.FROM_HTML_MODE_COMPACT));
         // Chuyển sang trang đăng nhập nếu đã có tài khoản
         TextView tvBackToLogin = view.findViewById(R.id.tv_back_to_login);
-        tvBackToLogin.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
+        tvBackToLogin.setOnClickListener(v -> {
+            // Thay vì popBackStack, ta dùng navigate để sang thẳng Login
+            // và dùng NavOptions để xóa màn hình Register hiện tại khỏi lịch sử
+            Navigation.findNavController(v).navigate(R.id.loginFragment, null,
+                    new NavOptions.Builder().setPopUpTo(R.id.registerFragment, true).build());
+        });
 
         // 2. Logic ẩn/hiện Mật khẩu
         ivTogglePass.setOnClickListener(v -> {
@@ -139,11 +145,15 @@ public class RegisterFragment extends Fragment {
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Toast.makeText(getContext(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                    Navigation.findNavController(view).popBackStack();
+
+                    // SỬA TẠI ĐÂY: Chuyển sang trang Đăng nhập sau khi đăng ký thành công
+                    Navigation.findNavController(view).navigate(R.id.loginFragment, null,
+                            new NavOptions.Builder().setPopUpTo(R.id.registerFragment, true).build());
                 } else {
                     Toast.makeText(getContext(), "Tên đăng nhập đã tồn tại", Toast.LENGTH_SHORT).show();
                 }
             }
+            // ... (các phần khác giữ nguyên)
 
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
