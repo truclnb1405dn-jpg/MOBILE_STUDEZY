@@ -1,5 +1,6 @@
 package com.example.studezy;
 
+
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -19,12 +20,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 
 import com.example.studezy.api.AddSemesterRequest;
 import com.example.studezy.api.RegisterResponse;
@@ -33,7 +36,9 @@ import com.example.studezy.api.ScheduleModel;
 import com.example.studezy.api.SemesterModel;
 import com.google.android.material.textfield.TextInputEditText;
 
+
 import org.json.JSONObject;
+
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -46,11 +51,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+
 public class ScheduleFragment extends Fragment {
+
 
     private RecyclerView rvSchedules;
     private String token;
@@ -61,20 +69,25 @@ public class ScheduleFragment extends Fragment {
     private TextView currentSelectedTab;
     private String currentSelectedDay = "2"; // Mặc định khi mở lên là xem Thứ 2
 
+
     // BỔ SUNG: Biến lưu trữ học kỳ hiện tại đang hiển thị
     private SemesterModel currentSemesterInfo = null;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_schedule, container, false);
     }
 
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
         SharedPreferences prefs = requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE);
         token = prefs.getString("USER_TOKEN", "");
+
 
         currentSemesterId = prefs.getInt("SELECTED_SEMESTER_ID", 1);
         // 1. NÚT BACK VÀ NÚT THÊM MỚI LỊCH HỌC
@@ -96,6 +109,7 @@ public class ScheduleFragment extends Fragment {
             });
         }
 
+
         // 2. NÚT CHỈNH SỬA HỌC KỲ
         View btnEditSemester = view.findViewById(R.id.btn_edit);
         if (btnEditSemester != null) {
@@ -108,10 +122,12 @@ public class ScheduleFragment extends Fragment {
             });
         }
 
+
         // 3. KHỞI TẠO RECYCLERVIEW (DANH SÁCH LỊCH HỌC)
         rvSchedules = view.findViewById(R.id.rv_schedules);
         if (rvSchedules != null) {
             rvSchedules.setLayoutManager(new LinearLayoutManager(getContext()));
+
 
             adapter = new ScheduleAdapter(new ScheduleAdapter.OnItemClickListener() {
                 @Override
@@ -120,16 +136,20 @@ public class ScheduleFragment extends Fragment {
                     bottomSheet.show(getParentFragmentManager(), "EditClassBottomSheet");
                 }
 
+
                 @Override
                 public void onDeleteClick(ScheduleModel schedule) {
                     showDeleteDialog(schedule);
                 }
             });
 
+
             rvSchedules.setAdapter(adapter);
         }
 
+
         setupTabClickListeners(view);
+
 
         // 4. MENU BOTTOM CHUYỂN TRANG
         view.findViewById(R.id.menu_home).setOnClickListener(v ->
@@ -139,19 +159,23 @@ public class ScheduleFragment extends Fragment {
         view.findViewById(R.id.menu_settings).setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.settingsFragment));
 
+
         // Tải dữ liệu ban đầu
         if (!token.isEmpty()) {
             loadSchedules();
         }
     }
 
+
     private void updateSemesterUI(String semesterName, String startDateStr, String endDateStr, int subjectCount) {
         View view = getView();
         if (view == null) return;
 
+
         View groupDetails = view.findViewById(R.id.group_semester_details);
         Button btnAddSemester = view.findViewById(R.id.btn_add_new_semester);
         TextView tvSubtitle = view.findViewById(R.id.tv_subtitle);
+
 
         if (startDateStr == null || endDateStr == null) {
             if (groupDetails != null) groupDetails.setVisibility(View.GONE);
@@ -163,10 +187,13 @@ public class ScheduleFragment extends Fragment {
             return;
         }
 
+
         if (groupDetails != null) groupDetails.setVisibility(View.VISIBLE);
         if (btnAddSemester != null) btnAddSemester.setVisibility(View.GONE);
 
+
         if (tvSubtitle != null) tvSubtitle.setText(semesterName);
+
 
         TextView tvStartDate = view.findViewById(R.id.tv_val_start_date);
         TextView tvEndDate = view.findViewById(R.id.tv_val_end_date);
@@ -175,9 +202,11 @@ public class ScheduleFragment extends Fragment {
         TextView tvProgressText = view.findViewById(R.id.tv_val_progress);
         ProgressBar progressBar = view.findViewById(R.id.progress_semester);
 
+
         if (tvStartDate != null) tvStartDate.setText(startDateStr);
         if (tvEndDate != null) tvEndDate.setText(endDateStr);
         if (tvSubjects != null) tvSubjects.setText(subjectCount + " môn");
+
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         try {
@@ -185,17 +214,21 @@ public class ScheduleFragment extends Fragment {
             Date endDate = sdf.parse(endDateStr);
             Date today = new Date();
 
+
             if (startDate != null && endDate != null) {
                 long diffInMillies = endDate.getTime() - startDate.getTime();
                 long totalDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
                 int totalWeeks = (int) Math.ceil(totalDays / 7.0);
                 if (tvTotalWeeks != null) tvTotalWeeks.setText(totalWeeks + " tuần");
 
+
                 long elapsedMillies = today.getTime() - startDate.getTime();
                 if (elapsedMillies < 0) elapsedMillies = 0;
                 if (elapsedMillies > diffInMillies) elapsedMillies = diffInMillies;
 
+
                 float progressPercentage = (float) elapsedMillies / diffInMillies * 100;
+
 
                 if (tvProgressText != null) tvProgressText.setText(String.format(Locale.getDefault(), "%.1f%% đã hoàn thành", progressPercentage));
                 if (progressBar != null) progressBar.setProgress((int) progressPercentage);
@@ -205,21 +238,26 @@ public class ScheduleFragment extends Fragment {
         }
     }
 
+
     private void showAddSemesterDialog() {
         Dialog dialog = new Dialog(requireContext());
         dialog.setContentView(R.layout.dialog_add_semester);
+
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
 
+
         EditText edtName = dialog.findViewById(R.id.edt_semester_name);
         TextView tvStartDate = dialog.findViewById(R.id.tv_select_start_date);
         TextView tvEndDate = dialog.findViewById(R.id.tv_select_end_date);
 
+
         Calendar startCalendar = Calendar.getInstance();
         Calendar endCalendar = Calendar.getInstance();
+
 
         tvStartDate.setOnClickListener(v -> {
             new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
@@ -229,6 +267,7 @@ public class ScheduleFragment extends Fragment {
             }, startCalendar.get(Calendar.YEAR), startCalendar.get(Calendar.MONTH), startCalendar.get(Calendar.DAY_OF_MONTH)).show();
         });
 
+
         tvEndDate.setOnClickListener(v -> {
             DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
                 endCalendar.set(year, month, dayOfMonth);
@@ -236,21 +275,26 @@ public class ScheduleFragment extends Fragment {
                 tvEndDate.setText(date);
             }, endCalendar.get(Calendar.YEAR), endCalendar.get(Calendar.MONTH), endCalendar.get(Calendar.DAY_OF_MONTH));
 
+
             datePickerDialog.getDatePicker().setMinDate(startCalendar.getTimeInMillis());
             datePickerDialog.show();
         });
 
+
         dialog.findViewById(R.id.btn_cancel_semester).setOnClickListener(v -> dialog.dismiss());
+
 
         dialog.findViewById(R.id.btn_save_semester).setOnClickListener(v -> {
             String name = edtName.getText().toString().trim();
             String startDate = tvStartDate.getText().toString();
             String endDate = tvEndDate.getText().toString();
 
+
             if (name.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
                 Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
                 return;
             }
+
 
             AddSemesterRequest requestObj = new AddSemesterRequest(name, startDate, endDate);
             RetrofitClient.getInstance().getApi().createSemester("Token " + token, requestObj)
@@ -260,21 +304,32 @@ public class ScheduleFragment extends Fragment {
                             if (response.isSuccessful() && response.body() != null) {
                                 dialog.dismiss();
                                 Toast.makeText(getContext(), "Đã thêm học kỳ mới", Toast.LENGTH_SHORT).show();
+
+
                                 SemesterModel newSem = response.body();
                                 currentSemesterInfo = newSem;
-                                updateSemesterUI(newSem.getName(), newSem.getStartDate(), newSem.getEndDate(), fullScheduleList.size());
-                            } else {
-                                // --- CẬP NHẬT ĐỂ ĐỌC LỖI TỪ BACKEND ---
-                                try {
-                                    String errorBody = response.errorBody().string();
-                                    JSONObject jsonObject = new JSONObject(errorBody);
-                                    String errorMessage = jsonObject.getString("error");
-                                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
-                                } catch (Exception e) {
-                                    Toast.makeText(getContext(), "Lỗi khi tạo học kỳ", Toast.LENGTH_SHORT).show();
+
+
+                                Object idObj = newSem.getId();
+                                if (idObj != null) {
+                                    currentSemesterId = idObj instanceof Number ? ((Number) idObj).intValue() : Integer.parseInt(idObj.toString());
+
+
+                                    // Lưu ID mới vào SharedPreferences để AddClassBottomSheet lấy được đúng ID
+                                    requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE)
+                                            .edit().putInt("SELECTED_SEMESTER_ID", currentSemesterId).apply();
                                 }
+
+
+
+
+                                updateSemesterUI(newSem.getName(), newSem.getStartDate(), newSem.getEndDate(), fullScheduleList.size());
+
+
+                                fetchClassSchedules();
                             }
                         }
+
 
                         @Override
                         public void onFailure(Call<SemesterModel> call, Throwable t) {
@@ -283,8 +338,10 @@ public class ScheduleFragment extends Fragment {
                     });
         });
 
+
         dialog.show();
     }
+
 
     // ==========================================
     // HIỂN THỊ DIALOG CHỈNH SỬA HỌC KỲ
@@ -295,6 +352,7 @@ public class ScheduleFragment extends Fragment {
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.dialog_edit_semester);
 
+
         Window window = dialog.getWindow();
         if (window != null) {
             window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -302,11 +360,13 @@ public class ScheduleFragment extends Fragment {
             window.setDimAmount(0.5f);
         }
 
+
         AutoCompleteTextView autoCompleteSemester = dialog.findViewById(R.id.autoComplete_semester);
         TextInputEditText edtStartDate = dialog.findViewById(R.id.edt_start_date);
         TextInputEditText edtEndDate = dialog.findViewById(R.id.edt_end_date);
         Button btnCancel = dialog.findViewById(R.id.btn_cancel);
         Button btnSave = dialog.findViewById(R.id.btn_save);
+
 
         // --- BƯỚC 1: TỰ ĐỘNG ĐIỀN THÔNG TIN CỦA HỌC KỲ HIỆN TẠI VÀO FORM ---
         if (currentSemesterInfo != null) {
@@ -314,6 +374,7 @@ public class ScheduleFragment extends Fragment {
             autoCompleteSemester.setText(currentSemesterInfo.getName(), false);
             edtStartDate.setText(currentSemesterInfo.getStartDate());
             edtEndDate.setText(currentSemesterInfo.getEndDate());
+
 
             // Lưu ID của học kỳ hiện tại vào nút Save
             Object idObj = currentSemesterInfo.getId();
@@ -323,6 +384,7 @@ public class ScheduleFragment extends Fragment {
             }
         }
 
+
         // --- BƯỚC 2: GỌI API LẤY DANH SÁCH HỌC KỲ ĐỂ CHỌN ---
         RetrofitClient.getInstance().getApi().getSemesters("Token " + token).enqueue(new Callback<List<SemesterModel>>() {
             @Override
@@ -331,44 +393,58 @@ public class ScheduleFragment extends Fragment {
                     List<SemesterModel> semesterList = response.body();
                     List<String> semesterNames = new ArrayList<>();
 
+
                     // --- BỔ SUNG: THÊM LỰA CHỌN TẠO HỌC KỲ MỚI VÀO ĐẦU DANH SÁCH ---
                     semesterNames.add("+ Tạo học kỳ mới");
+
 
                     for (SemesterModel s : semesterList) {
                         semesterNames.add(s.getName());
                     }
 
+
                     // Gắn dữ liệu vào Dropdown
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, semesterNames);
                     autoCompleteSemester.setAdapter(adapter);
+
 
                     // Đảm bảo chữ vừa set ở Bước 1 không bị filter mất
                     if (currentSemesterInfo != null) {
                         autoCompleteSemester.setText(currentSemesterInfo.getName(), false);
                     }
 
+
                     // Xử lý khi người dùng chọn item trong Dropdown
                     autoCompleteSemester.setOnItemClickListener((parent, view, position, id) -> {
                         if (position == 0) {
+
 
                             dialog.dismiss();
                             showAddSemesterDialog();
                         } else {
 
+
                             SemesterModel selected = semesterList.get(position - 1);
+
 
                             Object tagObj = selected.getId();
                             if(tagObj != null) {
                                 int selectedId = tagObj instanceof Number ? ((Number) tagObj).intValue() : Integer.parseInt(tagObj.toString());
 
 
+
+
                                 currentSemesterId = selectedId;
                                 currentSemesterInfo = selected;
+
 
                                 requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE)
                                         .edit().putInt("SELECTED_SEMESTER_ID", currentSemesterId).apply();
 
+
                                 fetchClassSchedules();
+
+
 
 
                                 dialog.dismiss();
@@ -378,28 +454,34 @@ public class ScheduleFragment extends Fragment {
                 }
             }
 
+
             @Override
             public void onFailure(Call<List<SemesterModel>> call, Throwable t) {
                 // Xử lý lỗi mạng (nếu cần)
             }
         });
 
+
         // Thiết lập chọn ngày (Date Picker)
         edtStartDate.setOnClickListener(v -> showDatePicker(edtStartDate));
         edtEndDate.setOnClickListener(v -> showDatePicker(edtEndDate));
 
+
         // Xử lý nút Huỷ và Lưu
         btnCancel.setOnClickListener(v -> dialog.dismiss());
+
 
         btnSave.setOnClickListener(v -> {
             String name = autoCompleteSemester.getText().toString().trim();
             String startDate = edtStartDate.getText().toString().trim();
             String endDate = edtEndDate.getText().toString().trim();
 
+
             if (name.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
                 Toast.makeText(getContext(), "Vui lòng nhập đầy đủ thông tin bắt buộc!", Toast.LENGTH_SHORT).show();
                 return;
             }
+
 
             Object tagId = btnSave.getTag();
             if (tagId == null) {
@@ -407,13 +489,16 @@ public class ScheduleFragment extends Fragment {
                 return;
             }
 
+
             int semesterId = (int) tagId;
+
 
             // Chuẩn bị Request Body
             Map<String, String> requestBody = new HashMap<>();
             requestBody.put("name", name);
             requestBody.put("start_date", startDate);
             requestBody.put("end_date", endDate);
+
 
             // Gọi API Cập nhật (PUT)
             RetrofitClient.getInstance().getApi().updateSemester("Token " + token, semesterId, requestBody).enqueue(new Callback<SemesterModel>() {
@@ -423,15 +508,19 @@ public class ScheduleFragment extends Fragment {
                         Toast.makeText(getContext(), "Cập nhật học kỳ thành công!", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
 
+
                         SemesterModel updatedSemester = response.body();
                         currentSemesterInfo = updatedSemester;
+
 
                         Object idObj = updatedSemester.getId();
                         if (idObj != null) {
                             currentSemesterId = idObj instanceof Number ? ((Number) idObj).intValue() : Integer.parseInt(idObj.toString());
                         }
 
+
                         fetchClassSchedules();
+
 
                     } else {
                         try {
@@ -445,6 +534,7 @@ public class ScheduleFragment extends Fragment {
                     }
                 }
 
+
                 @Override
                 public void onFailure(Call<SemesterModel> call, Throwable t) {
                     Toast.makeText(getContext(), "Lỗi mạng!", Toast.LENGTH_SHORT).show();
@@ -452,8 +542,10 @@ public class ScheduleFragment extends Fragment {
             });
         });
 
+
         dialog.show();
     }
+
 
     private void showDatePicker(TextInputEditText editText) {
         Calendar c = Calendar.getInstance();
@@ -463,8 +555,10 @@ public class ScheduleFragment extends Fragment {
         }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
     }
 
+
     private void loadSchedules() {
         if (rvSchedules == null) return;
+
 
         RetrofitClient.getInstance().getApi().getSemesters("Token " + token)
                 .enqueue(new Callback<List<SemesterModel>>() {
@@ -473,6 +567,7 @@ public class ScheduleFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                             List<SemesterModel> list = response.body();
                             boolean found = false;
+
 
                             for (SemesterModel sem : list) {
                                 int semId = ((Number) sem.getId()).intValue();
@@ -483,18 +578,22 @@ public class ScheduleFragment extends Fragment {
                                 }
                             }
 
+
                             // Nếu ID đã lưu không tồn tại trong danh sách mới, lấy cái đầu tiên
                             if (!found) {
                                 currentSemesterInfo = list.get(0);
                                 currentSemesterId = ((Number) currentSemesterInfo.getId()).intValue();
+
 
                                 // LƯU LẠI ID MỚI:
                                 requireActivity().getSharedPreferences("StudezyPrefs", Context.MODE_PRIVATE)
                                         .edit().putInt("SELECTED_SEMESTER_ID", currentSemesterId).apply();
                             }
 
+
                             updateSemesterUI(currentSemesterInfo.getName(), currentSemesterInfo.getStartDate(),
                                     currentSemesterInfo.getEndDate(), fullScheduleList.size());
+
 
                             fetchClassSchedules();
                         } else {
@@ -502,12 +601,14 @@ public class ScheduleFragment extends Fragment {
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<List<SemesterModel>> call, Throwable t) {
                         Toast.makeText(getContext(), "Lỗi tải thông tin học kỳ", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+
 
     private void fetchClassSchedules() {
         RetrofitClient.getInstance().getApi().getAllClassSchedules("Token " + token, currentSemesterId)
@@ -519,6 +620,7 @@ public class ScheduleFragment extends Fragment {
                             updateDayTabsCount(fullScheduleList);
                             filterSchedulesByDay(currentSelectedDay); // Cập nhật danh sách môn và thông báo trống
 
+
                             // Cập nhật lại số môn học trên thẻ thông tin
                             if (currentSemesterInfo != null) {
                                 updateSemesterUI(currentSemesterInfo.getName(), currentSemesterInfo.getStartDate(),
@@ -527,12 +629,14 @@ public class ScheduleFragment extends Fragment {
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<List<ScheduleModel>> call, Throwable t) {
                         Toast.makeText(getContext(), "Lỗi kết nối lịch học", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+
 
     private void setupTabClickListeners(View view) {
         TextView[] tabs = {
@@ -546,13 +650,17 @@ public class ScheduleFragment extends Fragment {
         };
         String[] dayValues = {"2", "3", "4", "5", "6", "7", "8"};
 
+
         currentSelectedTab = tabs[0];
+
 
         for (int i = 0; i < tabs.length; i++) {
             final TextView tab = tabs[i];
             final String dayValue = dayValues[i];
 
+
             if (tab == null) continue;
+
 
             tab.setOnClickListener(v -> {
                 if (currentSelectedTab != null) {
@@ -560,16 +668,20 @@ public class ScheduleFragment extends Fragment {
                     currentSelectedTab.setTextColor(Color.parseColor("#94989B"));
                 }
 
+
                 tab.setBackgroundResource(R.drawable.bg_tab_selected);
                 tab.setTextColor(Color.WHITE);
 
+
                 currentSelectedTab = tab;
                 currentSelectedDay = dayValue;
+
 
                 filterSchedulesByDay(dayValue);
             });
         }
     }
+
 
     private void filterSchedulesByDay(String dayValue) {
         List<ScheduleModel> filteredList = new ArrayList<>();
@@ -579,7 +691,9 @@ public class ScheduleFragment extends Fragment {
             }
         }
 
+
         TextView tvEmpty = getView().findViewById(R.id.tv_empty_message);
+
 
         if (filteredList.isEmpty()) {
             rvSchedules.setVisibility(View.GONE);
@@ -591,11 +705,14 @@ public class ScheduleFragment extends Fragment {
         }
     }
 
+
     private void updateDayTabsCount(List<ScheduleModel> schedules) {
         View view = getView();
         if (view == null) return;
 
+
         int[] counts = new int[7];
+
 
         for (ScheduleModel item : schedules) {
             String day = item.getDayOfWeek();
@@ -612,6 +729,7 @@ public class ScheduleFragment extends Fragment {
             }
         }
 
+
         TextView[] tabs = {
                 view.findViewById(R.id.tab_monday),
                 view.findViewById(R.id.tab_tuesday),
@@ -622,7 +740,9 @@ public class ScheduleFragment extends Fragment {
                 view.findViewById(R.id.tab_sunday)
         };
 
+
         String[] dayNames = {"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
+
 
         for (int i = 0; i < tabs.length; i++) {
             if (tabs[i] != null) {
@@ -632,17 +752,21 @@ public class ScheduleFragment extends Fragment {
         }
     }
 
+
     private void showDeleteDialog(ScheduleModel schedule) {
         android.app.Dialog dialog = new android.app.Dialog(getContext());
         dialog.setContentView(R.layout.dialog_delete_class);
         dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         dialog.getWindow().setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
 
+
         TextView tvMessage = dialog.findViewById(R.id.tv_delete_message);
         String message = "Lịch học <b>" + schedule.getSubjectName() + "</b> sẽ bị xoá vĩnh viễn khỏi thời khoá biểu. Hành động này không thể hoàn tác.";
         tvMessage.setText(android.text.Html.fromHtml(message, android.text.Html.FROM_HTML_MODE_COMPACT));
 
+
         dialog.findViewById(R.id.btn_cancel_delete).setOnClickListener(v -> dialog.dismiss());
+
 
         dialog.findViewById(R.id.btn_confirm_delete).setOnClickListener(v -> {
             RetrofitClient.getInstance().getApi().deleteClassSchedule("Token " + token, schedule.getId())
@@ -658,6 +782,7 @@ public class ScheduleFragment extends Fragment {
                             }
                         }
 
+
                         @Override
                         public void onFailure(Call<RegisterResponse> call, Throwable t) {
                             Toast.makeText(getContext(), "Lỗi mạng", Toast.LENGTH_SHORT).show();
@@ -665,6 +790,8 @@ public class ScheduleFragment extends Fragment {
                     });
         });
 
+
         dialog.show();
     }
 }
+
